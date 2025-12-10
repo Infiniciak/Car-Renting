@@ -10,8 +10,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+# Skopiuj tylko pliki konfiguracyjne najpierw (przyspiesza rebuild)
+COPY composer.json composer.lock ./
+
+# Instalacja zależności Composer
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Skopiuj resztę aplikacji
 COPY . .
 
-RUN composer install --no-interaction --prefer-dist
-
+# CMD pozostawiamy PHP-FPM, start.bat uruchomi php artisan serve
 CMD ["php-fpm"]
