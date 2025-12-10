@@ -14,7 +14,7 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 
 # Instalacja zależności Composer
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 # Skopiuj resztę aplikacji
 COPY . .
