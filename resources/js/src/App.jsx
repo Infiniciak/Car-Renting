@@ -6,13 +6,19 @@ import Login from '../pages/Login.jsx';
 import Register from '../pages/Register.jsx';
 
 function App() {
-    const role = localStorage.getItem('user_role');
-    const token = localStorage.getItem('token');
-
-    // Funkcja pomocnicza do ochrony tras
+    // FUNKCJA POMOCNICZA - teraz sprawdza dane ZA KAŻDYM RAZEM
     const ProtectedRoute = ({ children, allowedRole }) => {
-        if (!token) return <Navigate to="/login" />;
-        if (allowedRole && role !== allowedRole) return <Navigate to="/dashboard" />;
+        const currentToken = localStorage.getItem('token');
+        const currentRole = localStorage.getItem('user_role');
+
+        if (!currentToken) {
+            return <Navigate to="/login" />;
+        }
+
+        if (allowedRole && currentRole !== allowedRole) {
+            return <Navigate to="/dashboard" />;
+        }
+
         return children;
     };
 
@@ -21,22 +27,28 @@ function App() {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={
-                   !localStorage.getItem('token') ? <Navigate to="/login" /> :
-                    localStorage.getItem('user_role') === 'admin' ? <Navigate to="/admin" /> :
-                    localStorage.getItem('user_role') === 'employee' ? <Navigate to="/employee" /> :
-                    <Navigate to="/user" />
-                } />
+                
+                <Route path="/dashboard" element={<DashboardRedirect />} />
 
                 <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><AdminPanel /></ProtectedRoute>} />
                 <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel /></ProtectedRoute>} />
                 <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel /></ProtectedRoute>} />
                 
-                {/* Domyślna trasa */}
                 <Route path="/" element={<Navigate to="/login" />} />
             </Routes>
         </Router>
     );
 }
+
+// Wydzielona logika dashboardu, żeby zawsze czytała świeże dane
+const DashboardRedirect = () => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('user_role');
+
+    if (!token) return <Navigate to="/login" />;
+    if (role === 'admin') return <Navigate to="/admin" />;
+    if (role === 'employee') return <Navigate to="/employee" />;
+    return <Navigate to="/user" />;
+};
 
 export default App;

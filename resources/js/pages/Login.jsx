@@ -8,16 +8,30 @@ const Login = () => {
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await axios.post('http://localhost:8000/api/login', { email, password });
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user_role', response.data.role);
-            navigate('/dashboard');
-        } catch (error) {
-            alert('Błąd logowania!');
+    e.preventDefault();
+    try {
+        const response = await axios.post('http://localhost:8000/api/login', { email, password });
+        
+        // 1. NAJPIERW CZYŚCIMY WSZYSTKO
+        localStorage.clear(); 
+
+        // 2. POTEM ZAPISUJEMY NOWE DANE
+        const userRole = response.data.role;
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user_role', userRole);
+
+        // 3. PRZEKIEROWANIE NA PODSTAWIE ŚWIEŻEJ ZMIENNEJ userRole
+        if (userRole === 'admin') {
+            navigate('/admin');
+        } else if (userRole === 'employee') {
+            navigate('/employee');
+        } else {
+            navigate('/user');
         }
-    };
+    } catch (error) {
+        alert('Błąd logowania! Sprawdź dane.');
+    }
+};
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
