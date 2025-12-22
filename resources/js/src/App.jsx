@@ -6,6 +6,7 @@ import UserPanel from '../pages/UserPanel.jsx';
 import Login from '../pages/Login.jsx';
 import Register from '../pages/Register.jsx';
 import Profile from '../pages/Profile.jsx';
+import ForgotPassword from '../pages/ForgotPassword.jsx';
 function App() {
     const [auth, setAuth] = useState({
         token: localStorage.getItem('token'),
@@ -37,7 +38,7 @@ function App() {
                 {/* PRZEKAZUJEMY refreshAuth DO LOGINU */}
                 <Route path="/login" element={<Login onLoginSuccess={refreshAuth} />} />
                 <Route path="/register" element={<Register />} />
-                
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/profile" element={
                     <ProtectedRoute>
                         <Profile />

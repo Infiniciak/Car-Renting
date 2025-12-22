@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens; // DODAJ TO
-use App\Enums\UserRole; // DODAJ TO (zakładając, że tak nazywa się Twój enum)
+use App\Enums\UserRole; 
 
 class User extends Authenticatable
 {

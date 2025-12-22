@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\ApiAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -16,7 +17,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 Route::post('/login', [ApiAuthController::class, 'login']);
 Route::post('/register', [ApiAuthController::class, 'register']);
 Route::post('/forgot-password', [ApiAuthController::class, 'forgotPassword']);
-
+Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {
     
@@ -41,6 +42,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- TYLKO DLA PRACOWNIKA ---
     Route::middleware('role:employee')->prefix('employee')->group(function () {
-        // Tu dodasz trasy dla Nadii i Emilii (np. flota, rezerwacje)
+        
     });
 });
