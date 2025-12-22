@@ -2,61 +2,89 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
-const Login = () => {
+const Login = ({ onLoginSuccess }) => { // <--- Dodaliśmy onLoginSuccess do parametrów
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-        const response = await axios.post('http://localhost:8000/api/login', { email, password });
-        
-        // 1. NAJPIERW CZYŚCIMY WSZYSTKO
-        localStorage.clear(); 
+        e.preventDefault();
+        try {
+            const response = await axios.post('http://localhost:8000/api/login', { email, password });
+            
+            // 1. Czyścimy stare śmieci
+            localStorage.clear(); 
 
-        // 2. POTEM ZAPISUJEMY NOWE DANE
-        const userRole = response.data.role;
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user_role', userRole);
+            // 2. Zapisujemy świeże dane z serwera
+            const userRole = response.data.role;
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user_role', userRole);
 
-        // 3. PRZEKIEROWANIE NA PODSTAWIE ŚWIEŻEJ ZMIENNEJ userRole
-        if (userRole === 'admin') {
-            navigate('/admin');
-        } else if (userRole === 'employee') {
-            navigate('/employee');
-        } else {
-            navigate('/user');
+            // 3. KLUCZOWY MOMENT: Informujemy App.jsx, że dane się zmieniły
+            // Dzięki temu App.jsx odświeży swój stan i wpuści nas do paneli
+            if (onLoginSuccess) {
+                onLoginSuccess();
+            }
+
+            // 4. Przekierowanie
+            if (userRole === 'admin') {
+                navigate('/admin');
+            } else if (userRole === 'employee') {
+                navigate('/employee');
+            } else {
+                navigate('/user');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Błąd logowania! Sprawdź czy dane są poprawne.');
         }
-    } catch (error) {
-        alert('Błąd logowania! Sprawdź dane.');
-    }
-};
+    };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-                <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">Witaj ponownie!</h2>
-                <form onSubmit={handleLogin} className="space-y-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="text-center mb-10">
+                    <h2 className="text-3xl font-black text-gray-800 tracking-tight">Witaj ponownie!</h2>
+                    <p className="text-gray-500 mt-2 font-medium">Zaloguj się do swojego panelu sterowania</p>
+                </div>
+
+                <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 mt-1 border rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none" 
-                            placeholder="twoj@email.com" required />
+                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Email</label>
+                        <input 
+                            type="email" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full px-5 py-3 border-2 border-gray-50 bg-gray-50 rounded-xl focus:bg-white focus:border-indigo-500 outline-none transition-all font-medium" 
+                            placeholder="twoj@email.com" 
+                            required 
+                        />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Hasło</label>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 mt-1 border rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none" 
-                            placeholder="••••••••" required />
+                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Hasło</label>
+                        <input 
+                            type="password" 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-5 py-3 border-2 border-gray-50 bg-gray-50 rounded-xl focus:bg-white focus:border-indigo-500 outline-none transition-all font-medium" 
+                            placeholder="••••••••" 
+                            required 
+                        />
                     </div>
-                    <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200 font-semibold">
+
+                    <button 
+                        type="submit" 
+                        className="w-full bg-indigo-600 text-white py-4 rounded-xl hover:bg-indigo-700 transition-all font-black shadow-lg shadow-indigo-100 active:scale-[0.98]"
+                    >
                         Zaloguj się
                     </button>
                 </form>
-                <p className="mt-4 text-center text-sm text-gray-600">
-                    Nie masz konta? <Link to="/register" className="text-blue-600 hover:underline">Zarejestruj się</Link>
-                </p>
+
+                <div className="mt-8 pt-6 border-t border-gray-50 text-center">
+                    <p className="text-sm text-gray-600 font-medium">
+                        Nie masz konta? <Link to="/register" className="text-indigo-600 font-bold hover:underline">Zarejestruj się</Link>
+                    </p>
+                </div>
             </div>
         </div>
     );
