@@ -17,6 +17,7 @@ return new class extends Migration
         $table->string('address');
         $table->string('city');
         $table->string('postal_code');
+        $table->boolean('has_charging_station')->default(false);
         $table->timestamps();
     });
 }
