@@ -1,22 +1,27 @@
 services:
   app:
-    image: php:8.2-cli
-    container_name: car_rent_app
     build: .
+    container_name: car_rent_app
     working_dir: /var/www/html
+    restart: "no"
+    tty: true
+    stdin_open: true
+    
     volumes:
       - .:/var/www/html
     ports:
-      - "8000:8000"
+      - "8000:8001"
     environment:
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: car_rent
-      DB_USERNAME: caruser
-      DB_PASSWORD: carpass
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=car_rent
+      - DB_USERNAME=caruser
+      - DB_PASSWORD=carpass
     depends_on:
       - db
+    # Ta linia uruchomi serwer i utrzyma kontener przy życiu
+    command: tail -f /dev/null
 
   db:
     image: postgres:15
@@ -30,11 +35,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
   pgadmin:
     image: dpage/pgadmin4
-    container_name: car_rent_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_EMAIL: user@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
