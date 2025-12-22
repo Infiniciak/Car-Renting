@@ -23,7 +23,6 @@ const AdminRentalPoints = () => {
 
     const fetchPoints = async () => {
         try {
-            // Pamiętaj o /api w adresie
             const response = await axios.get('http://localhost:8000/api/admin/rental-points', {
                 headers: { Authorization: `Bearer ${token}` }
             });
