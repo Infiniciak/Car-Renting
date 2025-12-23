@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ApiAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\RentalPointController;
 
 
 /*
@@ -20,7 +21,7 @@ Route::post('/forgot-password', [ApiAuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     // Pobieranie danych zalogowanego użytkownika (do Profilu w React)
     Route::get('/user', function (Request $request) {
         return $request->user();
@@ -29,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profil użytkownika (przez dedykowany kontroler)
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
-    
+
     // Wylogowanie
     Route::post('/logout', [ApiAuthController::class, 'logout']);
 
@@ -38,6 +39,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [UserManagementController::class, 'index']); // Lista wszystkich
         Route::post('/employees', [UserManagementController::class, 'storeEmployee']); // Zatrudnianie
         Route::delete('/users/{user}', [UserManagementController::class, 'destroy']);
+
+        Route::get('/rental-points', [RentalPointController::class, 'index']);
+        Route::post('/rental-points', [RentalPointController::class, 'store']);
+        Route::put('/rental-points/{rentalPoint}', [RentalPointController::class, 'update']);
+        Route::delete('/rental-points/{rentalPoint}', [RentalPointController::class, 'destroy']);
     });
 
     // --- TYLKO DLA PRACOWNIKA ---
