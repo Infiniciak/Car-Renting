@@ -36,10 +36,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- TYLKO DLA ADMINA ---
     Route::middleware('role:admin')->prefix('admin')->group(function () {
-        Route::get('/users', [UserManagementController::class, 'index']); // Lista wszystkich
-        Route::post('/employees', [UserManagementController::class, 'storeEmployee']); // Zatrudnianie
-        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']);
+        
+        // ZARZĄDZANIE UŻYTKOWNIKAMI
+        Route::get('/users', [UserManagementController::class, 'index']);          // GET /api/admin/users
+        Route::put('/users/{user}', [UserManagementController::class, 'update']);   // PUT /api/admin/users/{id} <--- TO POPRAWIONE
+        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']); // DELETE /api/admin/users/{id}
+        
+        Route::post('/employees', [UserManagementController::class, 'storeEmployee']);
 
+        // PUNKTY WYPOŻYCZEŃ
         Route::get('/rental-points', [RentalPointController::class, 'index']);
         Route::post('/rental-points', [RentalPointController::class, 'store']);
         Route::put('/rental-points/{rentalPoint}', [RentalPointController::class, 'update']);
