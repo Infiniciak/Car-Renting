@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 
 const AdminRentalPoints = () => {
     const [points, setPoints] = useState([]);
-    // Dodano pole has_charging_station (domyślnie false)
     const [formData, setFormData] = useState({
         name: '',
         address: '',
@@ -48,7 +47,6 @@ const AdminRentalPoints = () => {
                 });
                 alert('Dodano nowy punkt!');
             }
-            // Reset formularza
             setFormData({ name: '', address: '', city: '', postal_code: '', has_charging_station: false });
             setEditingId(null);
             fetchPoints();
@@ -76,7 +74,6 @@ const AdminRentalPoints = () => {
             address: point.address,
             city: point.city,
             postal_code: point.postal_code,
-            // Backend może zwrócić 0/1 lub true/false, upewniamy się, że to boolean
             has_charging_station: Boolean(point.has_charging_station)
         });
         setEditingId(point.id);
@@ -101,7 +98,6 @@ const AdminRentalPoints = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* LEWA KOLUMNA: Formularz */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
                         <h2 className="text-xl font-bold mb-6 text-gray-800">
                             {editingId ? 'Edytuj Punkt' : 'Dodaj Nowy Punkt'}
@@ -151,8 +147,6 @@ const AdminRentalPoints = () => {
                                     required
                                 />
                             </div>
-
-                            {/* --- NOWE POLE: CHECKBOX --- */}
                             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
                                 <input
                                     type="checkbox"
@@ -179,7 +173,6 @@ const AdminRentalPoints = () => {
                         </form>
                     </div>
 
-                    {/* PRAWA KOLUMNA: Lista */}
                     <div className="lg:col-span-2 space-y-4">
                         {loading ? (
                             <p className="text-center text-gray-400">Ładowanie...</p>
@@ -193,7 +186,6 @@ const AdminRentalPoints = () => {
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <h3 className="text-lg font-bold text-gray-800">{point.name}</h3>
-                                            {/* --- IKONA ŁADOWARKI --- */}
                                             {point.has_charging_station ? (
                                                 <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
                                                     ⚡ EV Ready
