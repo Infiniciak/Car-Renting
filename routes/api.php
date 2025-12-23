@@ -21,7 +21,7 @@ Route::post('/forgot-password', [ApiAuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {
-
+    Route::post('/top-up', [ProfileController::class, 'topUp']);
     // Pobieranie danych zalogowanego użytkownika (do Profilu w React)
     Route::get('/user', function (Request $request) {
         return $request->user();
