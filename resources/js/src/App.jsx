@@ -7,6 +7,7 @@ import Login from '../pages/Login.jsx';
 import Register from '../pages/Register.jsx';
 import Profile from '../pages/Profile.jsx';
 import AdminRentalPoints from '../pages/AdminRentalPoints.jsx';
+import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
 function App() {
     const [auth, setAuth] = useState({
         token: localStorage.getItem('token'),
@@ -51,6 +52,7 @@ function App() {
                 <Route path="/admin/rental-points" element={<ProtectedRoute allowedRole="admin"><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/offer" element={<PublicRentalPoints />} />
 
                 <Route path="/" element={<Navigate to="/login" />} />
             </Routes>

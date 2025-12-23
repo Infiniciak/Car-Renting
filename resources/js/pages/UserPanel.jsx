@@ -16,14 +16,14 @@ const UserPanel = ({ onLogout }) => { // <--- Odbieramy props
             <nav className="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
                 <span className="text-xl font-black text-blue-600">CAR-RENT</span>
                 <div className="flex items-center gap-6">
-                    <button 
-                        onClick={() => navigate('/profile')} 
+                    <button
+                        onClick={() => navigate('/profile')}
                         className="text-gray-600 hover:text-blue-600 font-semibold transition"
                     >
                         Mój Profil
                     </button>
-                    <button 
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         className="text-gray-600 hover:text-red-600 font-medium border-l pl-6"
                     >
                         Wyloguj
@@ -40,6 +40,21 @@ const UserPanel = ({ onLogout }) => { // <--- Odbieramy props
                         <h2 className="text-xl font-bold mb-4">Twoje rezerwacje</h2>
                         <p className="text-gray-500 italic">Nie masz jeszcze żadnych aktywnych rezerwacji.</p>
                     </div>
+
+                    <div
+                        onClick={() => navigate('/offer')}
+                        className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer group hover:shadow-md hover:-translate-y-1 transition duration-300"
+                    >
+
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
+                        <p className="text-gray-500 text-sm mb-6">
+                            Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
+                        </p>
+                        <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+                            Zobacz Punkty &rarr;
+                        </button>
+                    </div>
+
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                         <h2 className="text-xl font-bold mb-4">Szybki wybór</h2>
                         <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
