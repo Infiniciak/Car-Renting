@@ -6,6 +6,7 @@ import UserPanel from '../pages/UserPanel.jsx';
 import Login from '../pages/Login.jsx';
 import Register from '../pages/Register.jsx';
 import Profile from '../pages/Profile.jsx';
+import AdminRentalPoints from '../pages/AdminRentalPoints.jsx';
 function App() {
     const [auth, setAuth] = useState({
         token: localStorage.getItem('token'),
@@ -37,7 +38,7 @@ function App() {
                 {/* PRZEKAZUJEMY refreshAuth DO LOGINU */}
                 <Route path="/login" element={<Login onLoginSuccess={refreshAuth} />} />
                 <Route path="/register" element={<Register />} />
-                
+
                 <Route path="/profile" element={
                     <ProtectedRoute>
                         <Profile />
@@ -47,9 +48,10 @@ function App() {
                 <Route path="/dashboard" element={<DashboardRedirect auth={auth} />} />
 
                 <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><AdminPanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/admin/rental-points" element={<ProtectedRoute allowedRole="admin"><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
-                
+
                 <Route path="/" element={<Navigate to="/login" />} />
             </Routes>
         </Router>
