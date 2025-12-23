@@ -2,6 +2,21 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+const customIcon = new L.Icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+
 const PublicRentalPoints = () => {
     const [points, setPoints] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -40,6 +55,18 @@ const PublicRentalPoints = () => {
         }
     };
 
+    const mapPoints = points
+        .filter(p => p.latitude && p.longitude)
+        .map(p => ({
+            ...p,
+            lat: parseFloat(p.latitude),
+            lng: parseFloat(p.longitude)
+        }));
+
+    const centerPosition = mapPoints.length > 0
+        ? [mapPoints[0].lat, mapPoints[0].lng]
+        : [52.00, 19.00];
+
     return (
         <div className="min-h-screen bg-gray-50">
             <nav className="bg-white shadow-sm p-4 mb-8 sticky top-0 z-50">
@@ -53,78 +80,74 @@ const PublicRentalPoints = () => {
                 </div>
             </nav>
 
-            <div className="max-w-6xl mx-auto p-4">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Znajdź punkt dla siebie</h2>
-                    <div className="flex flex-col md:flex-row gap-4 items-center">
-                        <div className="relative flex-1 w-full">
-                            <span className="absolute left-3 top-3 text-gray-400">🔍</span>
+          <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-80px)]">
+
+                <div className="lg:w-1/3 p-4 overflow-y-auto bg-gray-50 border-r border-gray-200 z-10">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 sticky top-0 z-20">
+                        <h2 className="text-lg font-bold text-gray-800 mb-3">Filtry</h2>
+                        <div className="space-y-3">
                             <input
                                 type="text"
-                                placeholder="Wpisz miasto lub nazwę punktu..."
-                                className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition"
+                                placeholder="Szukaj miasta..."
+                                className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
+                            <label className={`flex items-center gap-2 px-4 py-3 rounded-xl border cursor-pointer transition ${hasCharger ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-200 text-gray-600'}`}>
+                                <input type="checkbox" className="hidden" checked={hasCharger} onChange={(e) => setHasCharger(e.target.checked)} />
+                                <span className="font-bold text-sm">⚡ Tylko z ładowarką</span>
+                            </label>
                         </div>
-                        <label className={`flex items-center gap-2 px-4 py-3 rounded-xl border cursor-pointer transition select-none ${hasCharger ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-200 text-gray-600'}`}>
-                            <input
-                                type="checkbox"
-                                className="hidden"
-                                checked={hasCharger}
-                                onChange={(e) => setHasCharger(e.target.checked)}
-                            />
-                            <span className="font-bold">⚡ Tylko z ładowarką</span>
-                        </label>
                     </div>
-                </div>
 
-                {loading ? (
-                    <div className="text-center py-20 text-gray-400">Ładowanie ofert...</div>
-                ) : points.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
-                        <p className="text-xl font-bold text-gray-400">Nie znaleziono punktów pasujących do filtrów.</p>
-                        <button onClick={() => {setSearch(''); setHasCharger(false)}} className="mt-4 text-indigo-600 font-bold hover:underline">Wyczyść filtry</button>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="space-y-4 pb-20">
                         {points.map(point => (
-                            <div key={point.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition duration-300 group">
-                                <div className="h-48 bg-gray-100 relative overflow-hidden">
+                            <div key={point.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition cursor-pointer"
+                                 onClick={() => {
+                                 }}>
+                                <div className="h-32 bg-gray-200 relative">
                                     {point.image_path ? (
-                                        <img
-                                            src={STORAGE_URL + point.image_path}
-                                            alt={point.name}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                                        />
+                                        <img src={STORAGE_URL + point.image_path} alt={point.name} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
-                                            <span className="text-4xl">🏢</span>
-                                            <span className="text-xs mt-2">Brak zdjęcia</span>
-                                        </div>
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400">Brak zdjęcia</div>
                                     )}
-                                    {point.has_charging_station && (
-                                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-indigo-600 px-3 py-1 rounded-full text-xs font-black shadow-sm flex items-center gap-1">
-                                            ⚡ EV READY
-                                        </div>
-                                    )}
+                                    {point.has_charging_station && <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded text-xs font-bold text-indigo-600">⚡ EV</div>}
                                 </div>
-                                <div className="p-5">
-                                    <h3 className="text-lg font-bold text-gray-800 mb-1">{point.name}</h3>
-                                    <p className="text-gray-500 text-sm mb-4 flex items-center gap-1">
-                                        📍 {point.city}, {point.address}
-                                    </p>
-                                    <button className="w-full bg-gray-50 text-gray-700 font-bold py-3 rounded-xl hover:bg-indigo-600 hover:text-white transition">
-                                        Zobacz dostępne auta
-                                    </button>
+                                <div className="p-4">
+                                    <h3 className="font-bold text-gray-800">{point.name}</h3>
+                                    <p className="text-gray-500 text-sm">{point.city}, {point.address}</p>
                                 </div>
                             </div>
                         ))}
                     </div>
-                )}
+                </div>
+
+
+                <div className="lg:w-2/3 h-[50vh] lg:h-auto relative z-0">
+                    <MapContainer key={centerPosition[0]} center={centerPosition} zoom={6} scrollWheelZoom={true} className="w-full h-full">
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        {mapPoints.map(point => (
+                            <Marker key={point.id} position={[point.latitude, point.longitude]}>
+                                <Popup>
+                                    <div className="text-center">
+                                        <strong className="block text-sm mb-1">{point.name}</strong>
+                                        <span className="text-xs text-gray-500">{point.address}</span>
+                                        {point.image_path && (
+                                            <img src={STORAGE_URL + point.image_path} className="w-full h-20 object-cover rounded mt-2" />
+                                        )}
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        ))}
+                    </MapContainer>
+                </div>
+
             </div>
         </div>
     );
 };
 
-export default PublicRentalPoints;
+export default PublicRentalPoints

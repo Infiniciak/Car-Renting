@@ -23,6 +23,8 @@ class RentalPointController extends Controller
             'postal_code' => 'required|string|max:20',
             'has_charging_station' => 'boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         if ($request->hasFile('image')) {
@@ -44,6 +46,8 @@ class RentalPointController extends Controller
             'postal_code' => 'required|string|max:20',
             'has_charging_station' => 'sometimes|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $data = $request->except(['image']);

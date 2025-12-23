@@ -16,6 +16,8 @@ class RentalPoint extends Model
         'postal_code',
         'has_charging_station',
         'image_path',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
