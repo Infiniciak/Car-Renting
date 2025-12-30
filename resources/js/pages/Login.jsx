@@ -78,6 +78,11 @@ const Login = ({ onLoginSuccess }) => { // <--- Dodaliśmy onLoginSuccess do par
                     >
                         Zaloguj się
                     </button>
+                    <div className="text-right mt-2">
+                    <Link to="/forgot-password" size="sm" className="text-xs font-bold text-indigo-500 hover:underline">
+                        Zapomniałeś hasła?
+                    </Link>
+                    </div>
                 </form>
 
                 <div className="mt-8 pt-6 border-t border-gray-50 text-center">

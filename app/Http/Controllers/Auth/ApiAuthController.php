@@ -58,13 +58,46 @@ class ApiAuthController extends Controller
         return response()->json(['message' => 'Wylogowano']);
     }
 
+    
+    // Symulacja "zapomnienia" hasła
     public function forgotPassword(Request $request) {
-        $request->validate(['email' => 'required|email']);
-        
-        $status = Password::sendResetLink($request->only('email'));
+    $request->validate([
+        'email' => 'required|email|exists:users,email' // Walidacja: email musi istnieć w bazie
+    ]);
 
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => 'Link do resetu wysłany na email.'])
-            : response()->json(['message' => 'Nie udało się wysłać maila.'], 400);
+    $user = User::where('email', $request->email)->first();
+    
+    // Generujemy losowy kod i zapisujemy go w bazie dla tego usera
+    $code = (string)rand(100000, 999999);
+    $user->reset_code = $code;
+    $user->save();
+
+    return response()->json([
+        'message' => 'Kod wygenerowany.',
+        'code' => $code // Tylko do Twoich testów, normalnie byłoby w mailu
+    ]);
+    }
+
+// 2. Reset hasła
+public function resetPassword(Request $request) {
+    $request->validate([
+        'email' => 'required|email|exists:users,email',
+        'code' => 'required|string|min:6|max:6', // Kod musi mieć 6 znaków
+        'password' => 'required|string|min:8|confirmed', // Hasło min 8 znaków i musi być powtórzone
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    // WALIDACJA KODU: Sprawdzamy, czy kod z bazy zgadza się z tym od użytkownika
+    if (!$user->reset_code || $user->reset_code !== $request->code) {
+        return response()->json(['message' => 'Błędny kod weryfikacyjny.'], 422);
+    }
+
+    // Zmiana hasła i CZYSZCZENIE kodu, żeby nie można go było użyć drugi raz!
+    $user->password = Hash::make($request->password);
+    $user->reset_code = null; 
+    $user->save();
+
+    return response()->json(['message' => 'Hasło zmienione pomyślnie.']);
     }
 }
