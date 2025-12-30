@@ -8,7 +8,6 @@ const UserPanel = ({ onLogout }) => {
     const [topUpAmount, setTopUpAmount] = useState(50);
     const [loading, setLoading] = useState(true);
 
-    // Pobieranie aktualnych danych użytkownika (w tym salda)
     const fetchUserData = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -27,7 +26,6 @@ const UserPanel = ({ onLogout }) => {
         fetchUserData();
     }, []);
 
-    // Funkcja doładowania konta
     const handleTopUp = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -55,14 +53,14 @@ const UserPanel = ({ onLogout }) => {
             <nav className="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
                 <span className="text-xl font-black text-blue-600">CAR-RENT</span>
                 <div className="flex items-center gap-6">
-                    <button 
-                        onClick={() => navigate('/profile')} 
+                    <button
+                        onClick={() => navigate('/profile')}
                         className="text-gray-600 hover:text-blue-600 font-semibold transition"
                     >
                         Mój Profil
                     </button>
-                    <button 
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         className="text-gray-600 hover:text-red-600 font-medium border-l pl-6"
                     >
                         Wyloguj
@@ -78,7 +76,7 @@ const UserPanel = ({ onLogout }) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* SEKCJA PORTFELA (Pre-paid) */}
+                    {/* SEKCJA PORTFELA */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
                         <div>
                             <h2 className="text-xl font-bold mb-1">Twój Portfel</h2>
@@ -93,7 +91,7 @@ const UserPanel = ({ onLogout }) => {
                         
                         <div className="space-y-3">
                             <select 
-                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-semibold outline-none focus:border-blue-500"
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-semibold outline-none focus:border-blue-500 text-gray-700"
                                 value={topUpAmount}
                                 onChange={(e) => setTopUpAmount(e.target.value)}
                             >
@@ -119,15 +117,30 @@ const UserPanel = ({ onLogout }) => {
                         </div>
                     </div>
 
-                    {/* SZYBKI WYBÓR */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-center">
-                        <h2 className="text-xl font-bold mb-4 text-center">Gotowy na drogę?</h2>
-                        <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 mb-3">
-                            Przeglądaj samochody
-                        </button>
-                        <p className="text-center text-xs text-gray-400">
-                            Pamiętaj o doładowaniu konta przed wynajmem!
+                    {/* SZYBKI WYBÓR / MAPA */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
+                        <p className="text-gray-500 text-sm mb-6">
+                            Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
                         </p>
+                        <button 
+                            onClick={() => navigate('/offer')}
+                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 mb-4"
+                        >
+                            Zobacz Punkty &rarr;
+                        </button>
+                        
+                        <div className="mt-auto border-t pt-4 text-center">
+                            <button 
+                                onClick={() => navigate('/cars')} 
+                                className="text-blue-600 font-bold hover:underline"
+                            >
+                                Przeglądaj samochody
+                            </button>
+                            <p className="text-xs text-gray-400 mt-1">
+                                Pamiętaj o doładowaniu konta!
+                            </p>
+                        </div>
                     </div>
                 </div>
             </main>

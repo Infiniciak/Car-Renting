@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ApiAuthController;
+use App\Http\Controllers\Api\PublicRentalPointController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\RentalPointController;
@@ -18,6 +19,9 @@ Route::post('/login', [ApiAuthController::class, 'login']);
 Route::post('/register', [ApiAuthController::class, 'register']);
 Route::post('/forgot-password', [ApiAuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
+
+Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
+Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
 
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {

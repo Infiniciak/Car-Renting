@@ -9,6 +9,7 @@ import Profile from '../pages/Profile.jsx';
 import ForgotPassword from '../pages/ForgotPassword.jsx';
 import AdminRentalPoints from '../pages/AdminRentalPoints.jsx';
 import UserManagement from '../pages/UserManagement.jsx';
+import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
 
 function App() {
     const [auth, setAuth] = useState({
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/login" element={<Login onLoginSuccess={refreshAuth} />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/offer" element={<PublicRentalPoints />} />
 
                 {/* PROFIL */}
                 <Route path="/profile" element={
@@ -88,7 +90,7 @@ function App() {
             </Routes>
         </Router>
     );
-} // <--- TEJ KLAMRY BRAKOWAŁO W TWOIM KODZIE
+}
 
 const DashboardRedirect = ({ auth }) => {
     if (!auth.token) return <Navigate to="/login" />;
