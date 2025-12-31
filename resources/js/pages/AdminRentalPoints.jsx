@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const AdminRentalPoints = () => {
     const [points, setPoints] = useState([]);
     const [formData, setFormData] = useState({
-        name: '', address: '', city: '', postal_code: '', has_charging_station: false
+        name: '', address: '', city: '', postal_code: '', has_charging_station: false, latitude: '',  longitude: ''
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -50,6 +50,13 @@ const AdminRentalPoints = () => {
         data.append('city', formData.city);
         data.append('postal_code', formData.postal_code);
         data.append('has_charging_station', formData.has_charging_station ? '1' : '0');
+        if (formData.latitude) {
+            data.append('latitude', formData.latitude.toString().replace(',', '.'));
+    }
+
+        if (formData.longitude) {
+            data.append('longitude', formData.longitude.toString().replace(',', '.'));
+    }
 
         if (imageFile) {
             data.append('image', imageFile);
@@ -83,7 +90,7 @@ const AdminRentalPoints = () => {
     };
 
     const resetForm = () => {
-        setFormData({ name: '', address: '', city: '', postal_code: '', has_charging_station: false });
+        setFormData({ name: '', address: '', city: '', postal_code: '', has_charging_station: false, latitude: '', longitude: '' });
         setImageFile(null);
         setEditingId(null);
 
@@ -108,10 +115,50 @@ const AdminRentalPoints = () => {
             address: point.address,
             city: point.city,
             postal_code: point.postal_code,
-            has_charging_station: Boolean(point.has_charging_station)
+            has_charging_station: Boolean(point.has_charging_station),
+            latitude: point.latitude || '',
+            longitude: point.longitude || ''
         });
         setImageFile(null);
         setEditingId(point.id);
+    };
+
+    const handleGeocode = async () => {
+        // Sprawdzamy, czy wpisano miasto
+        if (!formData.city) {
+            alert("Wpisz najpierw miasto!");
+            return;
+        }
+
+        const query = `${formData.address}, ${formData.city}`;
+
+        try {
+            const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
+                params: {
+                    q: query,
+                    format: 'json',
+                    limit: 1
+                }
+            });
+
+            if (response.data && response.data.length > 0) {
+                const location = response.data[0];
+
+
+                setFormData(prev => ({
+                    ...prev,
+                    latitude: location.lat,
+                    longitude: location.lon
+                }));
+
+                alert(`Znaleziono: ${location.display_name}`);
+            } else {
+                alert("Nie znaleziono takiej lokalizacji. Sprawdź literówki.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Błąd połączenia z mapą.");
+        }
     };
 
     return (
@@ -131,6 +178,42 @@ const AdminRentalPoints = () => {
                             <input type="text" placeholder="Adres" className="w-full p-3 bg-gray-50 rounded-xl border" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} required />
                             <input type="text" placeholder="Kod pocztowy" className="w-full p-3 bg-gray-50 rounded-xl border" value={formData.postal_code} onChange={e => setFormData({...formData, postal_code: e.target.value})} required />
 
+                            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                <div className="flex justify-between items-center mb-3">
+                                    <label className="text-xs font-bold text-indigo-800 uppercase">Lokalizacja na mapie</label>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleGeocode}
+                                        className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition flex items-center gap-1"
+                                    >
+                                        📍 Pobierz z adresu
+                                    </button>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <div className="flex-1">
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            placeholder="Szerokość (Lat)"
+                                            className="w-full p-2 bg-white rounded border border-indigo-200 text-sm"
+                                            value={formData.latitude}
+                                            onChange={e => setFormData({...formData, latitude: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            placeholder="Długość (Lng)"
+                                            className="w-full p-2 bg-white rounded border border-indigo-200 text-sm"
+                                            value={formData.longitude}
+                                            onChange={e => setFormData({...formData, longitude: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
                             <div>
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Zdjęcie punktu</label>

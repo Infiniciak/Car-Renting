@@ -8,6 +8,7 @@ import Register from '../pages/Register.jsx';
 import Profile from '../pages/Profile.jsx';
 import ForgotPassword from '../pages/ForgotPassword.jsx';
 import AdminRentalPoints from '../pages/AdminRentalPoints.jsx';
+import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
 import UserManagement from '../pages/UserManagement.jsx';
 
 function App() {
@@ -51,6 +52,11 @@ function App() {
 
                 <Route path="/dashboard" element={<DashboardRedirect auth={auth} />} />
 
+                <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><AdminPanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/admin/rental-points" element={<ProtectedRoute allowedRole="admin"><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/offer" element={<PublicRentalPoints />} />
                 {/* ROLE: ADMIN */}
                 <Route path="/admin" element={
                     <ProtectedRoute allowedRole="admin">
