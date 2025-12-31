@@ -29,7 +29,7 @@ const UserPanel = ({ onLogout }) => {
     const handleTopUp = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:8000/api/top-up', 
+            const res = await axios.post('http://localhost:8000/api/top-up',
                 { amount: topUpAmount },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -88,9 +88,9 @@ const UserPanel = ({ onLogout }) => {
                                 <span className="text-blue-600 font-bold">PLN</span>
                             </div>
                         </div>
-                        
+
                         <div className="space-y-3">
-                            <select 
+                            <select
                                 className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-semibold outline-none focus:border-blue-500 text-gray-700"
                                 value={topUpAmount}
                                 onChange={(e) => setTopUpAmount(e.target.value)}
@@ -100,7 +100,7 @@ const UserPanel = ({ onLogout }) => {
                                 <option value="100">100 PLN</option>
                                 <option value="200">200 PLN</option>
                             </select>
-                            <button 
+                            <button
                                 onClick={handleTopUp}
                                 className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 transition shadow-md shadow-green-100"
                             >
@@ -117,56 +117,35 @@ const UserPanel = ({ onLogout }) => {
                         </div>
                     </div>
 
-                    {/* SZYBKI WYBÓR / MAPA */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
-                        <p className="text-gray-500 text-sm mb-6">
-                            Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
-                    <div
-                        onClick={() => navigate('/offer')}
-                        className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer group hover:shadow-md hover:-translate-y-1 transition duration-300"
-                    >
-
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
-                        <p className="text-gray-500 text-sm mb-6">
-                            Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
-                        </p>
-                        <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-                            Zobacz Punkty &rarr;
-                        </button>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h2 className="text-xl font-bold mb-4">Szybki wybór</h2>
-                        <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-                    {/* SZYBKI WYBÓR */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-center">
-                        <h2 className="text-xl font-bold mb-4 text-center">Gotowy na drogę?</h2>
-                        <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 mb-3">
-                            Przeglądaj samochody
-                        </button>
-                        <p className="text-center text-xs text-gray-400">
-                            Pamiętaj o doładowaniu konta przed wynajmem!
-                        </p>
-                        <button 
+                    {/* ZNAJDŹ NAS */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
+                            <p className="text-gray-500 text-sm mb-6">
+                                Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
+                            </p>
+                        </div>
+                        <button
                             onClick={() => navigate('/offer')}
-                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 mb-4"
+                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition"
                         >
                             Zobacz Punkty &rarr;
                         </button>
-                        
-                        <div className="mt-auto border-t pt-4 text-center">
-                            <button 
-                                onClick={() => navigate('/cars')} 
-                                className="text-blue-600 font-bold hover:underline"
-                            >
-                                Przeglądaj samochody
-                            </button>
-                            <p className="text-xs text-gray-400 mt-1">
-                                Pamiętaj o doładowaniu konta!
-                            </p>
-                        </div>
                     </div>
+                </div>
+
+                {/* DOLNA SEKCJA - SZYBKI WYBÓR */}
+                <div className="mt-8 bg-white p-8 rounded-3xl shadow-sm border border-gray-200 text-center">
+                    <h2 className="text-2xl font-bold mb-4">Gotowy na drogę?</h2>
+                    <button
+                        onClick={() => navigate('/cars')}
+                        className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 mb-4"
+                    >
+                        Przeglądaj samochody
+                    </button>
+                    <p className="text-gray-400 text-sm">
+                        Pamiętaj o doładowaniu konta przed wynajmem!
+                    </p>
                 </div>
             </main>
         </div>
