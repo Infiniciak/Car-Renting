@@ -6,15 +6,17 @@ import UserPanel from '../pages/UserPanel.jsx';
 import Login from '../pages/Login.jsx';
 import Register from '../pages/Register.jsx';
 import Profile from '../pages/Profile.jsx';
+import ForgotPassword from '../pages/ForgotPassword.jsx';
 import AdminRentalPoints from '../pages/AdminRentalPoints.jsx';
 import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
+import UserManagement from '../pages/UserManagement.jsx';
+
 function App() {
     const [auth, setAuth] = useState({
         token: localStorage.getItem('token'),
         role: localStorage.getItem('user_role')
     });
 
-    // Ta funkcja pozwoli Login.jsx odświeżyć stan całego App
     const refreshAuth = () => {
         setAuth({
             token: localStorage.getItem('token'),
@@ -36,10 +38,12 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* PRZEKAZUJEMY refreshAuth DO LOGINU */}
+                {/* TRASY PUBLICZNE */}
                 <Route path="/login" element={<Login onLoginSuccess={refreshAuth} />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
 
+                {/* PROFIL */}
                 <Route path="/profile" element={
                     <ProtectedRoute>
                         <Profile />
@@ -53,13 +57,44 @@ function App() {
                 <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/offer" element={<PublicRentalPoints />} />
+                {/* ROLE: ADMIN */}
+                <Route path="/admin" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminPanel onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/rental-points" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminRentalPoints onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/admin/users" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <UserManagement onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                {/* ROLA: EMPLOYEE */}
+                <Route path="/employee" element={
+                    <ProtectedRoute allowedRole="employee">
+                        <EmployeePanel onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                {/* ROLA: USER */}
+                <Route path="/user" element={
+                    <ProtectedRoute allowedRole="user">
+                        <UserPanel onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
 
                 <Route path="/" element={<Navigate to="/login" />} />
             </Routes>
         </Router>
     );
-}
-
+} // <--- TEJ KLAMRY BRAKOWAŁO W TWOIM KODZIE
 
 const DashboardRedirect = ({ auth }) => {
     if (!auth.token) return <Navigate to="/login" />;

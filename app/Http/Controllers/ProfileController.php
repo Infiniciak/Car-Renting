@@ -44,4 +44,18 @@ class ProfileController extends Controller
             'user' => $user
         ]);
     }
+    public function topUp(Request $request) {
+    $request->validate([
+        'amount' => 'required|numeric|min:1|max:10000'
+    ]);
+
+    $user = $request->user();
+    $user->balance += $request->amount;
+    $user->save();
+
+    return response()->json([
+        'message' => 'Konto zostało doładowane!',
+        'new_balance' => $user->balance
+    ]);
+    }
 }
