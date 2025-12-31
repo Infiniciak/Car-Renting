@@ -18,6 +18,10 @@ use App\Http\Controllers\Admin\RentalPointController;
 Route::post('/login', [ApiAuthController::class, 'login']);
 Route::post('/register', [ApiAuthController::class, 'register']);
 Route::post('/forgot-password', [ApiAuthController::class, 'forgotPassword']);
+
+Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
+Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
+
 Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
 
 Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
