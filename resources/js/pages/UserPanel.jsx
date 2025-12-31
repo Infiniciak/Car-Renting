@@ -122,6 +122,31 @@ const UserPanel = ({ onLogout }) => {
                         <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
                         <p className="text-gray-500 text-sm mb-6">
                             Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
+                    <div
+                        onClick={() => navigate('/offer')}
+                        className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer group hover:shadow-md hover:-translate-y-1 transition duration-300"
+                    >
+
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
+                        <p className="text-gray-500 text-sm mb-6">
+                            Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
+                        </p>
+                        <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+                            Zobacz Punkty &rarr;
+                        </button>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h2 className="text-xl font-bold mb-4">Szybki wybór</h2>
+                        <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+                    {/* SZYBKI WYBÓR */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-center">
+                        <h2 className="text-xl font-bold mb-4 text-center">Gotowy na drogę?</h2>
+                        <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 mb-3">
+                            Przeglądaj samochody
+                        </button>
+                        <p className="text-center text-xs text-gray-400">
+                            Pamiętaj o doładowaniu konta przed wynajmem!
                         </p>
                         <button 
                             onClick={() => navigate('/offer')}

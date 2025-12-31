@@ -13,6 +13,10 @@ use App\Http\Controllers\Auth\TwoFactorController;
 Route::post('/login', [ApiAuthController::class, 'login']);
 Route::post('/register', [ApiAuthController::class, 'register']);
 Route::post('/forgot-password', [ApiAuthController::class, 'forgotPassword']);
+
+Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
+Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
+
 Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
 
 // Weryfikacja kodu przy logowaniu (Użytkownik nie ma jeszcze tokena Bearer)
