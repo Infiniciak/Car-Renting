@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; // DODAJ TO
-use App\Enums\UserRole; 
+use Laravel\Sanctum\HasApiTokens;
+use App\Enums\UserRole;
+use Illuminate\Database\Eloquent\Relations\BelongsTo; 
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable; // DODAJ HasApiTokens tutaj
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -18,6 +19,7 @@ class User extends Authenticatable
         'password',
         'role',
         'balance',
+        'rental_point_id', 
     ];
 
     protected $hidden = [
@@ -30,7 +32,14 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class, // Mapowanie roli na Enum
+            'role' => UserRole::class,
+            'balance' => 'decimal:2', 
         ];
+    }
+
+   
+    public function rentalPoint(): BelongsTo
+    {
+        return $this->belongsTo(RentalPoint::class, 'rental_point_id');
     }
 }

@@ -8,7 +8,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\RentalPointController;
 
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -24,32 +23,32 @@ Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
 Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
 
 Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
+
+Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
+Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
+
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/top-up', [ProfileController::class, 'topUp']);
-    // Pobieranie danych zalogowanego użytkownika (do Profilu w React)
+    
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-    // Profil użytkownika (przez dedykowany kontroler)
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
-
-    // Wylogowanie
     Route::post('/logout', [ApiAuthController::class, 'logout']);
 
     // --- TYLKO DLA ADMINA ---
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         
-        // ZARZĄDZANIE UŻYTKOWNIKAMI
-        Route::get('/users', [UserManagementController::class, 'index']);          // GET /api/admin/users
-        Route::put('/users/{user}', [UserManagementController::class, 'update']);   // PUT /api/admin/users/{id} <--- TO POPRAWIONE
-        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']); // DELETE /api/admin/users/{id}
+        // ZARZĄDZANIE UŻYTKOWNIKAMI (CRUD)
+        Route::get('/users', [UserManagementController::class, 'index']);      
+        Route::post('/users', [UserManagementController::class, 'store']);     // DODANE: To naprawia błąd POST
+        Route::put('/users/{user}', [UserManagementController::class, 'update']); 
+        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']); 
         
-        Route::post('/employees', [UserManagementController::class, 'storeEmployee']);
-
-        // PUNKTY WYPOŻYCZEŃ
+        // PUNKTY WYPOŻYCZEŃ (CRUD)
         Route::get('/rental-points', [RentalPointController::class, 'index']);
         Route::post('/rental-points', [RentalPointController::class, 'store']);
         Route::put('/rental-points/{rentalPoint}', [RentalPointController::class, 'update']);
@@ -58,6 +57,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- TYLKO DLA PRACOWNIKA ---
     Route::middleware('role:employee')->prefix('employee')->group(function () {
-        
+        // tutaj w przyszłości trasy dla pracownika
     });
 });
