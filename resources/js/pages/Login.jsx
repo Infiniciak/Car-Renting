@@ -2,94 +2,157 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
-const Login = ({ onLoginSuccess }) => { // <--- Dodaliśmy onLoginSuccess do parametrów
+const Login = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [code, setCode] = useState('');
+    const [is2faRequired, setIs2faRequired] = useState(false);
+    const [userId, setUserId] = useState(null);
+    const [error, setError] = useState('');
+    
     const navigate = useNavigate();
+
+    // --- LOGIKA LOGOWANIA (ZABEZPIECZONA PRZED PĘTLĄ) ---
+    const loginSuccess = (data) => {
+        console.log("Logowanie - dane z backendu:", data);
+
+        // 1. ZABEZPIECZENIE: Sprawdzamy czy token istnieje i nie jest "undefined"
+        if (!data.token || data.token === 'undefined') {
+            setError('Błąd krytyczny: Serwer nie zwrócił tokena autoryzacji.');
+            return;
+        }
+
+        // 2. ZABEZPIECZENIE: Naprawa roli (gdyby Laravel wysłał obiekt Enuma)
+        let roleToSave = 'user';
+        if (data.role) {
+             if (typeof data.role === 'object') {
+                 roleToSave = data.role.value || 'user'; 
+             } else {
+                 roleToSave = data.role;
+             }
+        }
+
+        // Zapisujemy poprawne dane
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', roleToSave);
+        
+        // Odświeżamy stan w App.jsx
+        if (onLoginSuccess) onLoginSuccess();
+        
+        // Przekierowanie zależne od roli
+        if (roleToSave === 'admin') navigate('/admin');
+        else if (roleToSave === 'employee') navigate('/employee');
+        else navigate('/user');
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setError('');
         try {
             const response = await axios.post('http://localhost:8000/api/login', { email, password });
             
-            // 1. Czyścimy stare śmieci
-            localStorage.clear(); 
-
-            // 2. Zapisujemy świeże dane z serwera
-            const userRole = response.data.role;
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user_role', userRole);
-
-            // 3. KLUCZOWY MOMENT: Informujemy App.jsx, że dane się zmieniły
-            // Dzięki temu App.jsx odświeży swój stan i wpuści nas do paneli
-            if (onLoginSuccess) {
-                onLoginSuccess();
-            }
-
-            // 4. Przekierowanie
-            if (userRole === 'admin') {
-                navigate('/admin');
-            } else if (userRole === 'employee') {
-                navigate('/employee');
+            if (response.data.status === '2fa_required') {
+                setUserId(response.data.user_id);
+                setIs2faRequired(true);
             } else {
-                navigate('/user');
+                loginSuccess(response.data);
             }
-        } catch (error) {
-            console.error(error);
-            alert('Błąd logowania! Sprawdź czy dane są poprawne.');
+        } catch (err) {
+            console.error(err);
+            setError('Błędne dane logowania');
         }
     };
 
+    const handle2faVerify = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+            const response = await axios.post('http://localhost:8000/api/2fa/verify-login', {
+                user_id: userId,
+                code: code
+            });
+            loginSuccess(response.data);
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.message || 'Kod nieprawidłowy';
+            setError(msg);
+        }
+    };
+
+    // --- WYGLĄD DOPASOWANY DO REGISTER.JSX ---
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <div className="text-center mb-10">
-                    <h2 className="text-3xl font-black text-gray-800 tracking-tight">Witaj ponownie!</h2>
-                    <p className="text-gray-500 mt-2 font-medium">Zaloguj się do swojego panelu sterowania</p>
-                </div>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+                <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">
+                    {is2faRequired ? 'Weryfikacja 2FA' : 'Zaloguj się'}
+                </h2>
+                
+                {error && (
+                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-center text-sm font-bold">
+                        {error}
+                    </div>
+                )}
+                
+                {!is2faRequired ? (
+                    <>
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <input 
+                                type="email" 
+                                placeholder="Email" 
+                                className="w-full px-4 py-2 border rounded-md focus:ring-green-500 outline-none transition duration-200" 
+                                onChange={(e) => setEmail(e.target.value)} 
+                                required 
+                            />
+                            <input 
+                                type="password" 
+                                placeholder="Hasło" 
+                                className="w-full px-4 py-2 border rounded-md focus:ring-green-500 outline-none transition duration-200" 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                required 
+                            />
+                            <button type="submit" className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition duration-200 font-semibold">
+                                Zaloguj się
+                            </button>
+                        </form>
 
-                <form onSubmit={handleLogin} className="space-y-5">
-                    <div>
-                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Email</label>
+                        <div className="mt-4 text-center text-sm text-gray-600 flex flex-col gap-2">
+                            <Link to="/forgot-password" class="hover:text-green-600 hover:underline">
+                                Zapomniałeś hasła?
+                            </Link>
+                            <p>
+                                Nie masz konta?{' '}
+                                <Link to="/register" className="text-green-600 font-bold hover:underline">
+                                    Zarejestruj się
+                                </Link>
+                            </p>
+                        </div>
+                    </>
+                ) : (
+                    <form onSubmit={handle2faVerify} className="space-y-4">
+                        <p className="text-center text-gray-600 mb-2 text-sm">
+                            Wprowadź kod z aplikacji Google Authenticator
+                        </p>
                         <input 
-                            type="email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-5 py-3 border-2 border-gray-50 bg-gray-50 rounded-xl focus:bg-white focus:border-indigo-500 outline-none transition-all font-medium" 
-                            placeholder="twoj@email.com" 
+                            type="text" 
+                            placeholder="000000" 
+                            maxLength="6"
+                            className="w-full px-4 py-2 border rounded-md text-center text-2xl tracking-widest font-mono focus:ring-green-500 outline-none transition duration-200" 
+                            onChange={(e) => setCode(e.target.value)} 
                             required 
+                            autoFocus 
                         />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Hasło</label>
-                        <input 
-                            type="password" 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-5 py-3 border-2 border-gray-50 bg-gray-50 rounded-xl focus:bg-white focus:border-indigo-500 outline-none transition-all font-medium" 
-                            placeholder="••••••••" 
-                            required 
-                        />
-                    </div>
-
-                    <button 
-                        type="submit" 
-                        className="w-full bg-indigo-600 text-white py-4 rounded-xl hover:bg-indigo-700 transition-all font-black shadow-lg shadow-indigo-100 active:scale-[0.98]"
-                    >
-                        Zaloguj się
-                    </button>
-                    <div className="text-right mt-2">
-                    <Link to="/forgot-password" size="sm" className="text-xs font-bold text-indigo-500 hover:underline">
-                        Zapomniałeś hasła?
-                    </Link>
-                    </div>
-                </form>
-
-                <div className="mt-8 pt-6 border-t border-gray-50 text-center">
-                    <p className="text-sm text-gray-600 font-medium">
-                        Nie masz konta? <Link to="/register" className="text-indigo-600 font-bold hover:underline">Zarejestruj się</Link>
-                    </p>
-                </div>
+                        <button type="submit" className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition duration-200 font-semibold">
+                            Potwierdź
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={() => window.location.reload()} 
+                            className="w-full text-gray-500 text-sm mt-2 hover:underline"
+                        >
+                            Anuluj
+                        </button>
+                    </form>
+                )}
             </div>
         </div>
     );

@@ -19,7 +19,9 @@ class User extends Authenticatable
         'password',
         'role',
         'balance',
-        'rental_point_id', 
+        'rental_point_id',
+        'google2fa_secret',   
+        'two_factor_enabled' 
     ];
 
     protected $hidden = [

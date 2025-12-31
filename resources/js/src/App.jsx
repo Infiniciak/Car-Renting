@@ -11,16 +11,25 @@ import AdminRentalPoints from '../pages/AdminRentalPoints.jsx';
 import UserManagement from '../pages/UserManagement.jsx';
 import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
 
+// --- FUNKCJA POMOCNICZA: SPRAWDZANIE CZY TOKEN JEST PRAWIDŁOWY ---
+const isValidToken = (token) => {
+    if (!token) return false;
+    if (token === 'undefined') return false;
+    if (token === 'null') return false;
+    if (token === '[object Object]') return false;
+    return true;
+};
+
 function App() {
     const [auth, setAuth] = useState({
         token: localStorage.getItem('token'),
-        role: localStorage.getItem('user_role')
+        role: localStorage.getItem('role')
     });
 
     const refreshAuth = () => {
         setAuth({
             token: localStorage.getItem('token'),
-            role: localStorage.getItem('user_role')
+            role: localStorage.getItem('role')
         });
     };
 
@@ -29,74 +38,68 @@ function App() {
         return () => window.removeEventListener('storage', refreshAuth);
     }, []);
 
-    const ProtectedRoute = ({ children, allowedRole }) => {
-        if (!auth.token) return <Navigate to="/login" />;
-        if (allowedRole && auth.role !== allowedRole) return <Navigate to="/dashboard" />;
+    // --- ZABEZPIECZONY ROUTE ---
+    const ProtectedRoute = ({ children }) => {
+        const token = localStorage.getItem('token');
+        
+        if (!isValidToken(token)) {
+            // Jeśli token jest śmieciem, czyścimy go i wyrzucamy do logowania
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            return <Navigate to="/login" replace />;
+        }
         return children;
     };
 
     return (
         <Router>
             <Routes>
-                {/* TRASY PUBLICZNE */}
                 <Route path="/login" element={<Login onLoginSuccess={refreshAuth} />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/offer" element={<PublicRentalPoints />} />
 
-                {/* PROFIL */}
-                <Route path="/profile" element={
-                    <ProtectedRoute>
-                        <Profile />
-                    </ProtectedRoute>
-                } />
+                <Route path="/dashboard" element={<DashboardRedirect />} />
 
-                <Route path="/dashboard" element={<DashboardRedirect auth={auth} />} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-                {/* ROLE: ADMIN */}
-                <Route path="/admin" element={
-                    <ProtectedRoute allowedRole="admin">
-                        <AdminPanel onLogout={refreshAuth} />
-                    </ProtectedRoute>
-                } />
-                
-                <Route path="/admin/rental-points" element={
-                    <ProtectedRoute allowedRole="admin">
-                        <AdminRentalPoints onLogout={refreshAuth} />
-                    </ProtectedRoute>
-                } />
+                <Route path="/admin" element={<ProtectedRoute><AdminPanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/employee" element={<ProtectedRoute><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/user" element={<ProtectedRoute><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
 
-                <Route path="/admin/users" element={
-                    <ProtectedRoute allowedRole="admin">
-                        <UserManagement onLogout={refreshAuth} />
-                    </ProtectedRoute>
-                } />
+                <Route path="/admin/rental-points" element={<ProtectedRoute><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/admin/users" element={<ProtectedRoute><UserManagement onLogout={refreshAuth} /></ProtectedRoute>} />
 
-                {/* ROLA: EMPLOYEE */}
-                <Route path="/employee" element={
-                    <ProtectedRoute allowedRole="employee">
-                        <EmployeePanel onLogout={refreshAuth} />
-                    </ProtectedRoute>
-                } />
-
-                {/* ROLA: USER */}
-                <Route path="/user" element={
-                    <ProtectedRoute allowedRole="user">
-                        <UserPanel onLogout={refreshAuth} />
-                    </ProtectedRoute>
-                } />
-
-                <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </Router>
     );
 }
 
-const DashboardRedirect = ({ auth }) => {
-    if (!auth.token) return <Navigate to="/login" />;
-    if (auth.role === 'admin') return <Navigate to="/admin" />;
-    if (auth.role === 'employee') return <Navigate to="/employee" />;
-    return <Navigate to="/user" />;
+// --- ZABEZPIECZONY REDIRECT (TUTAJ BYŁA PĘTLA) ---
+const DashboardRedirect = () => {
+    const token = localStorage.getItem('token');
+    let role = localStorage.getItem('role');
+
+    // Jeśli token jest "undefined" lub go nie ma -> Logowanie
+    if (!isValidToken(token)) {
+        localStorage.clear(); // Czyścimy błędny stan
+        return <Navigate to="/login" replace />;
+    }
+    
+    // Jeśli rola jest "obiektem" (błąd Laravel Enum) -> Logowanie
+    if (role === '[object Object]') {
+         localStorage.clear();
+         return <Navigate to="/login" replace />;
+    }
+
+    // Normalizacja roli
+    role = role ? role.trim() : '';
+
+    if (role === 'admin') return <Navigate to="/admin" replace />;
+    if (role === 'employee') return <Navigate to="/employee" replace />;
+    
+    return <Navigate to="/user" replace />;
 };
 
 export default App;
