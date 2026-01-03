@@ -34,11 +34,31 @@ class TwoFactorController extends Controller
         if (Google2FA::verifyKey($user->google2fa_secret, $request->code)) {
             $user->two_factor_enabled = true;
             $user->save();
-            return response()->json(['message' => '2FA aktywne']);
+            return response()->json(['message' => '2FA aktywne', 'enabled' => true]);
         }
         return response()->json(['message' => 'Błędny kod'], 422);
     }
 
+    // --- NOWA METODA: Wyłączanie 2FA ---
+    public function disable(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            // Resetujemy pola w bazie danych
+            $user->google2fa_secret = null;
+            $user->two_factor_enabled = false;
+            $user->save();
+
+            return response()->json([
+                'message' => '2FA zostało wyłączone',
+                'enabled' => false
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Błąd serwera przy wyłączaniu 2FA'], 500);
+        }
+    }
+    
     public function verifyLogin(Request $request)
     {
         $request->validate(['user_id' => 'required', 'code' => 'required']);
@@ -47,7 +67,6 @@ class TwoFactorController extends Controller
         if (Google2FA::verifyKey($user->google2fa_secret, $request->code)) {
             return response()->json([
                 'token' => $user->createToken('auth_token')->plainTextToken,
-                // POPRAWKA: Pobieramy wartość tekstową z Enuma, aby JS nie zapisał "[object Object]"
                 'role' => $user->role->value ?? $user->role,
                 'user' => $user
             ]);

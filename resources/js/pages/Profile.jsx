@@ -105,12 +105,28 @@ const Profile = () => {
     };
 
     const disable2fa = async () => {
-        if(!window.confirm("Czy na pewno wyłączyć 2FA?")) return;
+        if(!window.confirm("Czy na pewno chcesz wyłączyć weryfikację dwuetapową? Twoje konto będzie mniej bezpieczne.")) return;
+        
+        setMessage('');
+        setError('');
+        
         try {
-            await axios.post('http://localhost:8000/api/2fa/disable', {}, { headers: { Authorization: `Bearer ${token}` } });
-            setMessage("2FA zostało wyłączone.");
-            setTwoFactor(prev => ({ ...prev, isEnabled: false }));
-        } catch (err) { setError("Błąd wyłączania 2FA."); }
+            const res = await axios.post('http://localhost:8000/api/2fa/disable', {}, { 
+                headers: { Authorization: `Bearer ${token}` } 
+            });
+            
+            if (res.status === 200) {
+                setMessage("2FA zostało wyłączone.");
+                setTwoFactor(prev => ({ 
+                    ...prev, 
+                    isEnabled: false, 
+                    qrUrl: '', 
+                    showSetup: false 
+                }));
+            }
+        } catch (err) { 
+            setError(err.response?.data?.message || "Błąd podczas wyłączania 2FA."); 
+        }
     };
 
     if (loading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Ładowanie...</div>;
