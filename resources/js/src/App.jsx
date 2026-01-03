@@ -8,8 +8,9 @@ import Register from '../pages/Register.jsx';
 import Profile from '../pages/Profile.jsx';
 import ForgotPassword from '../pages/ForgotPassword.jsx';
 import AdminRentalPoints from '../pages/AdminRentalPoints.jsx';
-import UserManagement from '../pages/UserManagement.jsx';
 import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
+import UserManagement from '../pages/UserManagement.jsx';
+
 
 // --- FUNKCJA POMOCNICZA: SPRAWDZANIE CZY TOKEN JEST PRAWIDŁOWY ---
 const isValidToken = (token) => {
@@ -41,7 +42,7 @@ function App() {
     // --- ZABEZPIECZONY ROUTE ---
     const ProtectedRoute = ({ children }) => {
         const token = localStorage.getItem('token');
-        
+
         if (!isValidToken(token)) {
             // Jeśli token jest śmieciem, czyścimy go i wyrzucamy do logowania
             localStorage.removeItem('token');
@@ -71,6 +72,54 @@ function App() {
                 <Route path="/admin/users" element={<ProtectedRoute><UserManagement onLogout={refreshAuth} /></ProtectedRoute>} />
 
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                {/* PROFIL */}
+                <Route path="/profile" element={
+                    <ProtectedRoute>
+                        <Profile />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/dashboard" element={<DashboardRedirect auth={auth} />} />
+
+                <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><AdminPanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/admin/rental-points" element={<ProtectedRoute allowedRole="admin"><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/offer" element={<PublicRentalPoints />} />
+                {/* ROLE: ADMIN */}
+                <Route path="/admin" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminPanel onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/admin/rental-points" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminRentalPoints onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/admin/users" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <UserManagement onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                {/* ROLA: EMPLOYEE */}
+                <Route path="/employee" element={
+                    <ProtectedRoute allowedRole="employee">
+                        <EmployeePanel onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                {/* ROLA: USER */}
+                <Route path="/user" element={
+                    <ProtectedRoute allowedRole="user">
+                        <UserPanel onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/" element={<Navigate to="/login" />} />
             </Routes>
         </Router>
     );
@@ -86,7 +135,7 @@ const DashboardRedirect = () => {
         localStorage.clear(); // Czyścimy błędny stan
         return <Navigate to="/login" replace />;
     }
-    
+
     // Jeśli rola jest "obiektem" (błąd Laravel Enum) -> Logowanie
     if (role === '[object Object]') {
          localStorage.clear();
@@ -98,7 +147,7 @@ const DashboardRedirect = () => {
 
     if (role === 'admin') return <Navigate to="/admin" replace />;
     if (role === 'employee') return <Navigate to="/employee" replace />;
-    
+
     return <Navigate to="/user" replace />;
 };
 
