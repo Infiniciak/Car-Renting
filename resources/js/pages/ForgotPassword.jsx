@@ -25,74 +25,78 @@ const ForgotPassword = () => {
     };
 
     // KROK 2: Resetowanie hasła
-    // Dodaj prostą walidację w handleReset przed wysłaniem:
-const handleReset = async (e) => {
-    e.preventDefault();
-    
-    // Walidacja po stronie klienta (dodatkowa)
-    if (code.length !== 6) {
-        alert("Kod musi mieć dokładnie 6 cyfr!");
-        return;
-    }
-    if (password.length < 8) {
-        alert("Hasło musi mieć minimum 8 znaków!");
-        return;
-    }
-    if (password !== passwordConfirmation) {
-        alert("Hasła nie są identyczne!");
-        return;
-    }
+    const handleReset = async (e) => {
+        e.preventDefault();
+        
+        if (code.length !== 6) {
+            alert("Kod musi mieć dokładnie 6 cyfr!");
+            return;
+        }
+        if (password.length < 8) {
+            alert("Hasło musi mieć minimum 8 znaków!");
+            return;
+        }
+        if (password !== passwordConfirmation) {
+            alert("Hasła nie są identyczne!");
+            return;
+        }
 
-    try {
-        await axios.post('http://localhost:8000/api/reset-password', { 
-            email, code, password, password_confirmation: passwordConfirmation 
-        });
-        alert("Sukces!");
-        navigate('/login');
-    } catch (err) {
-        alert(err.response?.data?.message || "Błąd resetowania");
-    }
-};
+        try {
+            await axios.post('http://localhost:8000/api/reset-password', { 
+                email, code, password, password_confirmation: passwordConfirmation 
+            });
+            alert("Sukces! Hasło zostało zmienione.");
+            navigate('/login');
+        } catch (err) {
+            alert(err.response?.data?.message || "Błąd resetowania");
+        }
+    };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6 font-sans">
-            <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
-                <div className="text-center mb-8">
-                    <h2 className="text-3xl font-black text-gray-800 tracking-tight">Reset Hasła</h2>
-                    <p className="text-gray-500 mt-2 font-medium">
-                        {step === 1 ? "Podaj swój e-mail" : "Wpisz kod i nowe hasło"}
-                    </p>
-                </div>
-                
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+                <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">
+                    {step === 1 ? "Reset Hasła" : "Zmiana Hasła"}
+                </h2>
+
                 {message && (
-                    <div className="mb-6 p-4 bg-indigo-50 text-indigo-700 rounded-2xl text-sm font-bold border border-indigo-100">
+                    <div className="mb-4 p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded text-center text-sm font-bold">
                         {message}
                     </div>
                 )}
-
+                
                 {step === 1 ? (
-                    <form onSubmit={handleRequestCode} className="space-y-4">
-                        <input 
-                            type="email" 
-                            placeholder="Twój adres e-mail" 
-                            required 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full p-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium"
-                        />
-                        <button type="submit" className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-wider hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
-                            Wyślij kod
-                        </button>
-                    </form>
+                    <>
+                        <p className="text-center text-gray-600 mb-4 text-sm">
+                            Podaj swój adres e-mail, aby otrzymać kod weryfikacyjny.
+                        </p>
+                        <form onSubmit={handleRequestCode} className="space-y-4">
+                            <input 
+                                type="email" 
+                                placeholder="Twój adres e-mail" 
+                                required 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-2 border rounded-md focus:ring-green-500 outline-none transition duration-200" 
+                            />
+                            <button type="submit" className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition duration-200 font-semibold">
+                                Wyślij kod
+                            </button>
+                        </form>
+                    </>
                 ) : (
                     <form onSubmit={handleReset} className="space-y-4">
+                        <p className="text-center text-gray-600 mb-4 text-sm">
+                            Wprowadź kod otrzymany w wiadomości oraz nowe hasło.
+                        </p>
                         <input 
                             type="text" 
-                            placeholder="Kod (123456)" 
+                            placeholder="Kod (6 cyfr)" 
                             required 
+                            maxLength="6"
                             value={code} 
                             onChange={(e) => setCode(e.target.value)}
-                            className="w-full p-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium"
+                            className="w-full px-4 py-2 border rounded-md focus:ring-green-500 outline-none transition duration-200" 
                         />
                         <input 
                             type="password" 
@@ -100,7 +104,7 @@ const handleReset = async (e) => {
                             required 
                             value={password} 
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full p-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium"
+                            className="w-full px-4 py-2 border rounded-md focus:ring-green-500 outline-none transition duration-200" 
                         />
                         <input 
                             type="password" 
@@ -108,16 +112,16 @@ const handleReset = async (e) => {
                             required 
                             value={passwordConfirmation} 
                             onChange={(e) => setPasswordConfirmation(e.target.value)}
-                            className="w-full p-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium"
+                            className="w-full px-4 py-2 border rounded-md focus:ring-green-500 outline-none transition duration-200" 
                         />
-                        <button type="submit" className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-wider hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
+                        <button type="submit" className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition duration-200 font-semibold">
                             Zmień hasło
                         </button>
                     </form>
                 )}
                 
-                <div className="mt-8 text-center border-t border-gray-50 pt-6">
-                    <Link to="/login" className="text-sm font-bold text-gray-400 hover:text-indigo-600 transition-colors uppercase tracking-widest">
+                <div className="mt-6 text-center text-sm text-gray-600">
+                    <Link to="/login" className="text-green-600 font-bold hover:underline">
                         Wróć do logowania
                     </Link>
                 </div>
