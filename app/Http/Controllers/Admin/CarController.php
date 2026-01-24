@@ -8,23 +8,29 @@ use Illuminate\Http\Request;
 
 class CarController extends Controller
 {
+    /**
+     * Pobierz listę wszystkich samochodów wraz z ich punktami stacjonowania.
+     */
     public function index()
     {
         return response()->json(Car::with('rentalPoint')->get());
     }
 
+    /**
+     * Dodaj nowy samochód do bazy.
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
             'brand' => 'required|string|max:255',
             'model' => 'required|string|max:255',
-            'year' => 'required|integer|min:1900|max:'.(date('Y') + 1),
-            'registration_number' => 'required|string|unique:cars',
+            'year' => 'required|integer|min:1900|max:'.(date('Y')),
+            'registration_number' => 'required|string|unique:cars,registration_number',
             'type' => 'required|string',
             'fuel_type' => 'required|string',
             'transmission' => 'required|string',
-            'seats' => 'required|integer|min:1',
-            'price_per_day' => 'required|numeric|min:0',
+            'seats' => 'required|integer|min:1|max:9',
+            'price_per_day' => 'required|numeric|min:50',
             'insurance_per_day' => 'required|numeric|min:0',
             'status' => 'required|string',
             'rental_point_id' => 'nullable|exists:rental_points,id',
@@ -36,31 +42,50 @@ class CarController extends Controller
 
         $car = Car::create($data);
 
-        return response()->json(['message' => 'Samochód dodany!', 'car' => $car->load('rentalPoint')], 201);
+        return response()->json([
+            'message' => 'Samochód dodany!',
+            'car' => $car->load('rentalPoint')
+        ], 201);
     }
 
+    /**
+     * Zaktualizuj dane istniejącego samochodu.
+     */
     public function update(Request $request, Car $car)
     {
         $data = $request->validate([
-            'brand' => 'required|string',
-            'model' => 'required|string',
-            'year' => 'required|integer',
-            'registration_number' => 'required|string|unique:cars,registration_number,'.$car->id,
-            'price_per_day' => 'required|numeric',
-            'rental_point_id' => 'nullable|exists:rental_points,id',
+            'brand' => 'required|string|max:255',
+            'model' => 'required|string|max:255',
+            'year' => 'required|integer|min:1900|max:'.(date('Y')),
+            'registration_number' => 'required|string|unique:cars,registration_number,' . $car->id,
+            'type' => 'required|string',
+            'fuel_type' => 'required|string',
+            'transmission' => 'required|string',
+            'seats' => 'required|integer|min:1|max:9',
+            'price_per_day' => 'required|numeric|min:50',
+            'insurance_per_day' => 'required|numeric|min:0',
             'status' => 'required|string',
+            'rental_point_id' => 'nullable|exists:rental_points,id',
+            'description' => 'nullable|string',
             'has_gps' => 'boolean',
             'has_air_conditioning' => 'boolean',
+            'discount_percentage' => 'nullable|numeric|between:0,100',
         ]);
 
         $car->update($data);
 
-        return response()->json(['message' => 'Zaktualizowano!', 'car' => $car->load('rentalPoint')]);
+        return response()->json([
+            'message' => 'Zaktualizowano pomyślnie!',
+            'car' => $car->load('rentalPoint')
+        ]);
     }
 
+    /**
+     * Usuń samochód z bazy.
+     */
     public function destroy(Car $car)
     {
         $car->delete();
-        return response()->json(['message' => 'Usunięto pomyślnie']);
+        return response()->json(['message' => 'Samochód został usunięty']);
     }
 }
