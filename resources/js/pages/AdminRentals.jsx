@@ -229,9 +229,20 @@ const AdminRentals = () => {
     };
 
     const filteredRentals = rentals.filter(rental => {
+        const searchLower = searchTerm.toLowerCase();
         const userName = rental.user?.name?.toLowerCase() || '';
         const carBrand = rental.car?.brand?.toLowerCase() || '';
-        return userName.includes(searchTerm.toLowerCase()) || carBrand.includes(searchTerm.toLowerCase());
+        const carModel = rental.car?.model?.toLowerCase() || '';
+        const startCity = rental.rental_point_start?.city?.toLowerCase() || '';
+        const endCity = rental.rental_point_end?.city?.toLowerCase() || '';
+        const rentalId = rental.id?.toString() || '';
+
+        return userName.includes(searchLower)
+            || carBrand.includes(searchLower)
+            || carModel.includes(searchLower)
+            || startCity.includes(searchLower)
+            || endCity.includes(searchLower)
+            || rentalId.includes(searchLower);
     });
 
 
