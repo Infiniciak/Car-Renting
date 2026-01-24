@@ -66,7 +66,7 @@ const AdminPanel = ({ onLogout }) => {
                 </div>
 
                 <h2 className="text-xl font-black mb-6 text-gray-800 uppercase tracking-tight">Moduły Zarządzania</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
 
                     {/* MODUŁ: Punkty Wypożyczeń */}
                     <div
@@ -80,7 +80,7 @@ const AdminPanel = ({ onLogout }) => {
                         <span className="text-3xl bg-indigo-50 p-3 rounded-xl group-hover:scale-110 transition">📍</span>
                     </div>
 
-                    {/* NOWY MODUŁ: Zarządzanie Użytkownikami (Kafelek) */}
+                    {/* MODUŁ: Zarządzanie Użytkownikami */}
                     <div
                         onClick={() => navigate('/admin/users')}
                         className="bg-white p-6 rounded-2xl border border-gray-100 cursor-pointer hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-300 group flex items-center justify-between"
@@ -104,9 +104,15 @@ const AdminPanel = ({ onLogout }) => {
                         <span className="text-3xl bg-emerald-50 p-3 rounded-xl group-hover:scale-110 transition">🚗</span>
                     </div>
 
-                    {/* PLACEHOLDER */}
-                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 border-dashed flex items-center justify-center text-gray-400">
-                        <span className="text-sm font-bold opacity-60 italic">Kolejny moduł wkrótce...</span>
+                    <div
+                        onClick={() => navigate('/admin/rentals')}
+                        className="bg-white p-6 rounded-2xl border border-gray-100 cursor-pointer hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-300 group flex items-center justify-between"
+                    >
+                        <div>
+                            <h3 className="text-gray-800 font-bold text-lg group-hover:text-indigo-600 transition">Zarządzanie Rezerwacjami</h3>
+                            <p className="text-gray-500 text-sm mt-1">Dodaj i edytuj rezerwacje</p>
+                        </div>
+                        <span className="text-3xl bg-emerald-50 p-3 rounded-xl group-hover:scale-110 transition">🚗</span>
                     </div>
 
                 </div>
