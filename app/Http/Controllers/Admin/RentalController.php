@@ -62,7 +62,7 @@ class RentalController extends Controller
             'car_id' => 'required|exists:cars,id',
             'rental_point_start_id' => 'required|exists:rental_points,id',
             'rental_point_end_id' => 'required|exists:rental_points,id',
-            'start_date' => 'required|date',
+            'start_date' => 'required|date|after_or_equal:now',
             'planned_end_date' => 'required|date|after:start_date',
             'notes' => 'nullable|string',
         ]);
@@ -187,10 +187,15 @@ class RentalController extends Controller
             'cancellation_reason' => 'required|string',
         ]);
 
+        $now = now();
+        $startDate = Carbon::parse($rental->start_date);
+
+        $newStatus = $now->lt($startDate) ? 'cancelled' : 'early_return';
+
         $refundAmount = $rental->calculateEarlyReturnRefund();
 
         $rental->update([
-            'status' => 'early_return',
+            'status' => $newStatus,
             'actual_end_date' => now(),
             'cancellation_reason' => $validated['cancellation_reason'],
             'refund_amount' => $refundAmount,
