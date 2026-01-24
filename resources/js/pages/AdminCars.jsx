@@ -1,0 +1,202 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const AdminCars = () => {
+    const [cars, setCars] = useState([]);
+    const [points, setPoints] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [editingCar, setEditingCar] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const [formData, setFormData] = useState({
+        brand: '', model: '', year: 2026, registration_number: '',
+        type: 'sedan', fuel_type: 'petrol', transmission: 'manual',
+        seats: 5, price_per_day: '', insurance_per_day: '50',
+        status: 'available', rental_point_id: '', has_gps: false,
+        has_air_conditioning: true, description: ''
+    });
+
+    const token = localStorage.getItem('token');
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+
+    useEffect(() => { fetchData(); }, []);
+
+    const fetchData = async () => {
+        try {
+            const [carsRes, pointsRes] = await Promise.all([
+                axios.get('http://localhost:8000/api/admin/cars', config),
+                axios.get('http://localhost:8000/api/admin/rental-points', config)
+            ]);
+            setCars(carsRes.data);
+            setPoints(pointsRes.data);
+            setLoading(false);
+        } catch (err) {
+            alert("Błąd połączenia z serwerem");
+            setLoading(false);
+        }
+    };
+
+    const handleOpenAddModal = () => {
+        setEditingCar(null);
+        setFormData({
+            brand: '', model: '', year: 2026, registration_number: '',
+            type: 'sedan', fuel_type: 'petrol', transmission: 'manual',
+            seats: 5, price_per_day: '', insurance_per_day: '50',
+            status: 'available', rental_point_id: '', has_gps: false,
+            has_air_conditioning: true, description: ''
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleOpenEditModal = (car) => {
+        setEditingCar(car);
+        setFormData({
+            ...car,
+            has_gps: !!car.has_gps,
+            has_air_conditioning: !!car.has_air_conditioning,
+            rental_point_id: car.rental_point_id || ''
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const dataToSend = {
+            ...formData,
+            rental_point_id: formData.rental_point_id === '' ? null : formData.rental_point_id
+        };
+
+        try {
+            if (editingCar) {
+                // EDYCJA
+                const response = await axios.put(`http://localhost:8000/api/admin/cars/${editingCar.id}`, dataToSend, config);
+                const updatedCar = response.data.car;
+
+                setCars(prevCars => prevCars.map(c => c.id === editingCar.id ? updatedCar : c));
+            } else {
+                const response = await axios.post('http://localhost:8000/api/admin/cars', dataToSend, config);
+                const newCar = response.data.car;
+
+                setCars(prevCars => [newCar, ...prevCars]);
+            }
+
+            setIsModalOpen(false);
+        } catch (err) {
+            alert(err.response?.data?.message || "Błąd zapisu!");
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Usunąć pojazd?")) return;
+        try {
+            await axios.delete(`http://localhost:8000/api/admin/cars/${id}`, config);
+            fetchData();
+        } catch (err) { alert("Błąd usuwania"); }
+    };
+
+    if (loading) return <div className="min-h-screen bg-[#11111d] flex items-center justify-center text-white italic">Ładowanie...</div>;
+
+    return (
+        <div className="min-h-screen bg-[#11111d] p-8 text-white font-sans">
+            <div className="max-w-6xl mx-auto">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tighter uppercase">Zarządzanie Pojazdami</h1>
+                        <p className="text-indigo-400 font-medium">Baza pojazdów</p>
+                    </div>
+                    <div className="flex gap-4">
+                        <input
+                            type="text" placeholder="Szukaj pojazdu..."
+                            className="bg-[#1e1e2d] border border-white/10 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500 transition-all"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <button onClick={handleOpenAddModal} className="bg-indigo-600 hover:bg-indigo-700 px-6 py-4 rounded-2xl font-black transition-all">
+                            + DODAJ POJAZD
+                        </button>
+                    </div>
+                </div>
+
+                {/* Lista Pojazdów */}
+                <div className="grid grid-cols-1 gap-4">
+                    {cars.filter(c => c.brand.toLowerCase().includes(searchTerm.toLowerCase())).map(car => (
+                        <div key={car.id} className="bg-[#1e1e2d] p-6 rounded-[2rem] border border-white/5 flex flex-col md:flex-row justify-between items-center group transition-all">
+                            <div className="flex items-center gap-6 w-full">
+                                <div className="h-16 w-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-2xl">🚗</div>
+                                <div>
+                                    <h3 className="font-bold text-xl">{car.brand} {car.model}</h3>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                        <span className="text-[10px] bg-indigo-500/20 px-2 py-1 rounded text-indigo-400 uppercase font-bold">{car.registration_number}</span>
+                                        <span className={`text-[10px] px-2 py-1 rounded uppercase font-bold ${car.status === 'available' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>{car.status}</span>
+                                        <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 font-bold">{car.price_per_day} PLN</span>
+                                        <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-blue-400 font-bold uppercase">
+                                            {car.rental_point ? car.rental_point.city : '📦 Magazyn (Brak punktu)'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 mt-4 md:mt-0">
+                                <button onClick={() => handleOpenEditModal(car)} className="px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-sm">Edytuj</button>
+                                <button onClick={() => handleDelete(car.id)} className="px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl font-bold text-sm">Usuń</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* MODAL SYSTEM */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
+                    <div className="bg-[#1e1e2d] p-10 rounded-[3rem] border border-white/10 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+                        <h2 className="text-3xl font-black mb-8 uppercase tracking-tighter">{editingCar ? "Edytuj" : "Dodaj"} Pojazd</h2>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input className="bg-[#11111d] p-4 rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500" placeholder="Marka" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} required />
+                                <input className="bg-[#11111d] p-4 rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500" placeholder="Model" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} required />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <input className="bg-[#11111d] p-4 rounded-2xl border-none text-white" placeholder="Nr rejestracyjny" value={formData.registration_number} onChange={e => setFormData({...formData, registration_number: e.target.value})} required />
+                                <input type="number" className="bg-[#11111d] p-4 rounded-2xl border-none text-white" placeholder="Rok" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
+                                <input type="number" className="bg-[#11111d] p-4 rounded-2xl border-none text-white" placeholder="Miejsca" value={formData.seats} onChange={e => setFormData({...formData, seats: e.target.value})} />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <select
+                                    className="bg-[#11111d] p-4 rounded-2xl border-none text-gray-400"
+                                    value={formData.rental_point_id || ''}
+                                    onChange={e => setFormData({...formData, rental_point_id: e.target.value})}
+                                >
+                                    <option value="">-- Brak punktu --</option>
+                                    {points.map(p => <option key={p.id} value={p.id}>{p.city} - {p.name}</option>)}
+                                </select>
+                                <input type="number" className="bg-[#11111d] p-4 rounded-2xl border-none text-emerald-400 font-bold" placeholder="Cena PLN / doba" value={formData.price_per_day} onChange={e => setFormData({...formData, price_per_day: e.target.value})} required />
+                            </div>
+
+                            <div className="flex gap-8 p-4 bg-[#11111d] rounded-2xl justify-center">
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" className="w-5 h-5 accent-indigo-600" checked={formData.has_gps} onChange={e => setFormData({...formData, has_gps: e.target.checked})} />
+                                    <span className="text-sm font-bold group-hover:text-indigo-400 transition">GPS</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" className="w-5 h-5 accent-indigo-600" checked={formData.has_air_conditioning} onChange={e => setFormData({...formData, has_air_conditioning: e.target.checked})} />
+                                    <span className="text-sm font-bold group-hover:text-indigo-400 transition">Klimatyzacja</span>
+                                </label>
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 py-4 rounded-2xl font-black uppercase shadow-lg shadow-indigo-500/20 transition-all">Zapisz</button>
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-bold uppercase transition-all">Anuluj</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AdminCars;

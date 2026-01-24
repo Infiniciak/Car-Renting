@@ -19,7 +19,7 @@ const AdminPanel = ({ onLogout }) => {
                     <span className="bg-indigo-600 text-white px-3 py-1 rounded text-sm font-bold shadow-sm shadow-indigo-200">ADMIN</span>
                     <span className="text-xl font-bold text-gray-800 tracking-tight">System Zarządzania</span>
                 </div>
-                
+
                 <div className="flex items-center gap-6">
                     {/* NOWY PRZYCISK: Zarządzanie Użytkownikami w Navibarze */}
                     <button
@@ -38,7 +38,7 @@ const AdminPanel = ({ onLogout }) => {
                     >
                         Ustawienia Profilu
                     </button>
-                    
+
                     <button
                         onClick={handleLogout}
                         className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition border border-red-100"
@@ -47,7 +47,7 @@ const AdminPanel = ({ onLogout }) => {
                     </button>
                 </div>
             </nav>
-            
+
             <div className="max-w-7xl mx-auto p-8">
                 {/* STATYSTYKI */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -90,6 +90,18 @@ const AdminPanel = ({ onLogout }) => {
                             <p className="text-gray-500 text-sm mt-1">Role i uprawnienia</p>
                         </div>
                         <span className="text-3xl bg-blue-50 p-3 rounded-xl group-hover:scale-110 transition">👥</span>
+                    </div>
+
+                    {/* MODUŁ: Samochody */}
+                    <div
+                        onClick={() => navigate('/admin/cars')}
+                        className="bg-white p-6 rounded-2xl border border-gray-100 cursor-pointer hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-300 group flex items-center justify-between"
+                    >
+                        <div>
+                            <h3 className="text-gray-800 font-bold text-lg group-hover:text-indigo-600 transition">Zarządzanie Pojazdami</h3>
+                            <p className="text-gray-500 text-sm mt-1">Dodaj i edytuj samochody</p>
+                        </div>
+                        <span className="text-3xl bg-emerald-50 p-3 rounded-xl group-hover:scale-110 transition">🚗</span>
                     </div>
 
                     {/* PLACEHOLDER */}
