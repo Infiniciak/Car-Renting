@@ -10,8 +10,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call([
+            CarSeeder::class,
+        ]);
         // 1. TWORZENIE UŻYTKOWNIKÓW (HASŁO: password123)
-        
+
         // Administrator
         User::create([
             'name' => 'Administrator',
@@ -30,7 +33,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'pracownik@test.com',
             'password' => Hash::make('password123'),
             'role' => 'employee',
-            'rental_point_id' => null 
+            'rental_point_id' => null
         ]);
 
         // Klient

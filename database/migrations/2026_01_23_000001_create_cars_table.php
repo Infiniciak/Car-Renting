@@ -33,7 +33,7 @@ return new class extends Migration {
             $table->foreignId('rental_point_id')
                 ->nullable()
                 ->constrained('rental_points')
-                ->onDelete('cascade');
+                ->onDelete('set null');
 
             $table->timestamps();
         });
