@@ -11,6 +11,7 @@ import AdminRentalPoints from '../pages/AdminRentalPoints.jsx';
 import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
 import UserManagement from '../pages/UserManagement.jsx';
 import AdminCars from '../pages/AdminCars.jsx';
+import AdminRentals from '../pages/AdminRentals.jsx';
 
 
 // --- FUNKCJA POMOCNICZA: SPRAWDZANIE CZY TOKEN JEST PRAWIDŁOWY ---
@@ -85,6 +86,7 @@ function App() {
 
                 <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><AdminPanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/admin/rental-points" element={<ProtectedRoute allowedRole="admin"><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/admin/rentals" element={<ProtectedRoute allowedRole="admin"><AdminRentals onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/offer" element={<PublicRentalPoints />} />
