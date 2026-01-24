@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\RentalPointController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\Admin\CarController;
 
 // --- TRASY PUBLICZNE ---
 Route::post('/login', [ApiAuthController::class, 'login']);
@@ -28,7 +29,7 @@ Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/top-up', [ProfileController::class, 'topUp']);
-    
+
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
@@ -44,14 +45,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- TYLKO DLA ADMINA ---
     Route::middleware('role:admin')->prefix('admin')->group(function () {
-        Route::get('/users', [UserManagementController::class, 'index']);      
-        Route::post('/users', [UserManagementController::class, 'store']);     
-        Route::put('/users/{user}', [UserManagementController::class, 'update']); 
-        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']); 
-        
+        Route::get('/users', [UserManagementController::class, 'index']);
+        Route::post('/users', [UserManagementController::class, 'store']);
+        Route::put('/users/{user}', [UserManagementController::class, 'update']);
+        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']);
+
         Route::get('/rental-points', [RentalPointController::class, 'index']);
         Route::post('/rental-points', [RentalPointController::class, 'store']);
         Route::put('/rental-points/{rentalPoint}', [RentalPointController::class, 'update']);
         Route::delete('/rental-points/{rentalPoint}', [RentalPointController::class, 'destroy']);
+
+        Route::get('/cars', [CarController::class, 'index']);
+        Route::post('/cars', [CarController::class, 'store']);
+        Route::put('/cars/{car}', [CarController::class, 'update']);
+        Route::delete('/cars/{car}', [CarController::class, 'destroy']);
     });
 });

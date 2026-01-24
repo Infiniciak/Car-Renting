@@ -31,6 +31,7 @@ return new class extends Migration {
 
             // Klucz obcy - w którym punkcie jest samochód
             $table->foreignId('rental_point_id')
+                ->nullable()
                 ->constrained('rental_points')
                 ->onDelete('cascade');
 
