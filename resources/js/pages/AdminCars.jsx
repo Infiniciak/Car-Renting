@@ -183,14 +183,36 @@ const AdminCars = () => {
                                         <p className="text-indigo-400 font-bold">{car.registration_number}</p>
                                     </div>
                                     <div>
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Miejsca</p>
+                                        <p className="font-bold text-gray-200">{car.seats} os.</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Status</p>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${car.status === 'available' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                            {car.status === 'available' ? 'Dostępny' : car.status}
+                                        </span>
+                                    </div>
+                                    <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Lokalizacja</p>
                                         <p className="text-blue-400 font-bold text-sm leading-tight">
-                                            {car.rental_point ? `${car.rental_point.name} (${car.rental_point.city})` : '📦 Magazyn'}
+                                            {car.rental_point
+                                                ? `${car.rental_point.name} (${car.rental_point.city})`
+                                                : '📦 Magazyn / Brak przypisania'}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Cena (doba)</p>
                                         <p className="font-bold text-emerald-400">{car.price_per_day} PLN</p>
+                                    </div>
+                                                                        <div>
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Rok Produkcji</p>
+                                        <p className="font-bold text-gray-400">{car.year}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Wyposażenie</p>
+                                        <p className="text-[10px] font-bold text-gray-500">
+                                            {car.has_air_conditioning ? 'KLIMATYZACJA' : ''} {car.has_gps ? 'GPS' : ''}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -228,7 +250,7 @@ const AdminCars = () => {
                                     <input className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.registration_number} onChange={e => setFormData({...formData, registration_number: e.target.value})} required />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rok</label>
+                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rok Produkcji</label>
                                     <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
                                 </div>
                                 <div>
@@ -258,7 +280,7 @@ const AdminCars = () => {
                                 </label>
                                 <label className="flex items-center gap-3 cursor-pointer group">
                                     <input type="checkbox" className="w-6 h-6 accent-indigo-600 rounded" checked={formData.has_air_conditioning} onChange={e => setFormData({...formData, has_air_conditioning: e.target.checked})} />
-                                    <span className="text-sm font-black group-hover:text-indigo-400 transition uppercase text-xs">Klima</span>
+                                    <span className="text-sm font-black group-hover:text-indigo-400 transition uppercase text-xs">Klimatyzacja</span>
                                 </label>
                             </div>
 
