@@ -31,7 +31,12 @@ const AdminPanel = ({ onLogout }) => {
                         </svg>
                         Baza Użytkowników
                     </button>
-
+                    <button
+                        onClick={() => navigate('/admin/dashboard')}
+                        className="text-gray-600 hover:text-indigo-600 font-semibold transition"
+                    >
+                        Statystyki
+                    </button>
                     <button
                         onClick={() => navigate('/profile')}
                         className="text-gray-600 hover:text-indigo-600 font-semibold transition"

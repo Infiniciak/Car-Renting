@@ -42,6 +42,8 @@ docker compose exec app php artisan migrate:fresh --seed
 echo [*] Buduje manifest Vite...
 docker compose exec app npm run build
 
+docker-compose exec app npm install recharts
+
 :: 8. START SERWEROW
 echo [*] Startuje serwery w nowych oknach...
 
