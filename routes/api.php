@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\RentalPointController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Admin\CarController;
 use App\Http\Controllers\Admin\RentalController;
+use App\Http\Controllers\Admin\AdminStatsController;
 
 // --- TRASY PUBLICZNE ---
 Route::post('/login', [ApiAuthController::class, 'login']);
@@ -72,5 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/rentals/{rental}', [RentalController::class, 'destroy']);
 
         Route::post('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
+
+        Route::get('/stats', [AdminStatsController::class, 'index']);
     });
 });

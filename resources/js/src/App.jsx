@@ -12,6 +12,7 @@ import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
 import UserManagement from '../pages/UserManagement.jsx';
 import AdminCars from '../pages/AdminCars.jsx';
 import AdminRentals from '../pages/AdminRentals.jsx';
+import AdminDashboard from '../pages/AdminDashboard.jsx';
 import PublicCarListing from '../pages/PublicCarListing.jsx';
 import PublicCarDetails from '../pages/PublicCarDetails.jsx';
 
@@ -77,6 +78,7 @@ function App() {
                 <Route path="/admin/rental-points" element={<ProtectedRoute><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute><UserManagement onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/admin/cars" element={<ProtectedRoute allowedRole="admin"><AdminCars onLogout={refreshAuth} /></ProtectedRoute>} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 {/* PROFIL */}
