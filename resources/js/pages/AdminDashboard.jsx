@@ -3,13 +3,11 @@ import axios from 'axios';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid,
-    ScatterChart, Scatter, ComposedChart, Line
 } from 'recharts';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
 
-    // Profesjonalna paleta kolorów: Indigo, Violet, Rose, Amber, Emerald
     const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#fbbf24', '#10b981'];
 
     useEffect(() => {
@@ -50,7 +48,6 @@ const AdminDashboard = () => {
                     </div>
                 </header>
 
-                {/* KAFELKI KPI */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                     {[
                         { label: 'Wszystkie Auta', val: stats.general.total_cars, color: 'text-indigo-400', sub: 'Liczba pojazdów' },
@@ -67,7 +64,6 @@ const AdminDashboard = () => {
                     ))}
                 </div>
 
-                {/* RZĄD 1: GŁÓWNE STRUKTURY */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     <div className="bg-[#1e1e2d] p-8 rounded-[3rem] border border-white/5 shadow-xl h-[450px]">
                         <h3 className="text-xs font-black uppercase tracking-widest mb-8 text-gray-400 border-l-4 border-indigo-500 pl-4">Typy Nadwozia</h3>
@@ -109,7 +105,6 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                {/* RZĄD 2: ANALIZA SZCZEGÓŁOWA */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                     <div className="lg:col-span-2 bg-[#1e1e2d] p-8 rounded-[3rem] border border-white/5 shadow-xl h-[400px]">
                         <h3 className="text-xs font-black uppercase tracking-widest mb-8 text-gray-400 border-l-4 border-emerald-500 pl-4">Rodzaje Paliwa</h3>
