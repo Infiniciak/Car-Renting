@@ -12,6 +12,8 @@ import PublicRentalPoints from '../pages/PublicRentalPoints.jsx';
 import UserManagement from '../pages/UserManagement.jsx';
 import AdminCars from '../pages/AdminCars.jsx';
 import AdminRentals from '../pages/AdminRentals.jsx';
+import PublicCarListing from '../pages/PublicCarListing.jsx';
+import PublicCarDetails from '../pages/PublicCarDetails.jsx';
 
 
 // --- FUNKCJA POMOCNICZA: SPRAWDZANIE CZY TOKEN JEST PRAWIDŁOWY ---
@@ -61,6 +63,8 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/offer" element={<PublicRentalPoints />} />
+                <Route path="/cars" element={<PublicCarListing />} />
+                <Route path="/car/:id" element={<PublicCarDetails />} />
 
                 <Route path="/dashboard" element={<DashboardRedirect />} />
 

@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ApiAuthController;
 use App\Http\Controllers\Api\PublicRentalPointController;
+use App\Http\Controllers\Api\PublicCarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\RentalPointController;
@@ -18,6 +19,9 @@ Route::post('/forgot-password', [ApiAuthController::class, 'forgotPassword']);
 
 Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
 Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
+
+Route::get('/cars', [PublicCarController::class, 'index']);
+Route::get('/cars/{id}', [PublicCarController::class, 'show']);
 
 Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
 
