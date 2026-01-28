@@ -10,18 +10,16 @@ class AdminStatsController extends Controller
 {
 public function index()
 {
-    // Statystyki paliwa
+
     $fuelStats = Car::select('fuel_type', DB::raw('count(*) as total'))
         ->groupBy('fuel_type')
         ->get();
 
-    // Statystyki miast (wymaga relacji z rentalPoint)
     $cityStats = Car::join('rental_points', 'cars.rental_point_id', '=', 'rental_points.id')
         ->select('rental_points.city', DB::raw('count(*) as total'))
         ->groupBy('rental_points.city')
         ->get();
 
-    // Podstawowe dane (już masz, ale upewnij się, że są pełne)
     $carsByType = Car::select('type', DB::raw('count(*) as total'))->groupBy('type')->get();
     $avgPriceByType = Car::select('type', DB::raw('round(avg(price_per_day), 2) as avg_price'))->groupBy('type')->get();
 
