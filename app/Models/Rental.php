@@ -110,15 +110,15 @@ class Rental extends Model
      */
     public function canBeCancelled(): bool
     {
-        return in_array($this->status, ['active']);
+        return in_array($this->status, ['active', 'reserved']);
     }
 
-    /**
-     * Oblicz zwrot za wcześniejsze oddanie (zadanie 17)
-     * Proporcjonalnie od czasu i odległości
-     */
     public function calculateEarlyReturnRefund(): float
     {
+        if ($this->status === 'reserved' || Carbon::now()->lt($this->start_date)) {
+            return (float) $this->total_price;
+        }
+
         if (!$this->isActive()) {
             return 0;
         }
@@ -127,22 +127,17 @@ class Rental extends Model
         $start = Carbon::parse($this->start_date);
         $plannedEnd = Carbon::parse($this->planned_end_date);
 
-        // Ile dni już minęło
-        $daysUsed = max(1, $start->diffInDays($now));
+        $totalHours = max(1, $start->diffInHours($plannedEnd));
+        $hoursUsed = $start->diffInHours($now);
 
-        // Ile dni było planowanych
-        $totalDays = max(1, $start->diffInDays($plannedEnd));
-
-        // Jeśli minęło więcej dni niż planowano, brak zwrotu
-        if ($daysUsed >= $totalDays) {
+        if ($hoursUsed >= $totalHours) {
             return 0;
         }
 
-        // Proporcjonalny zwrot
-        $daysRemaining = $totalDays - $daysUsed;
-        $refundPercentage = ($daysRemaining / $totalDays);
+        $hoursRemaining = $totalHours - $hoursUsed;
 
-        // Zwracamy proporcjonalnie
-        return round($this->total_price * $refundPercentage * 0.8, 2);
+        $refundPercentage = ($hoursRemaining / $totalHours) * 0.80;
+
+        return round($this->total_price * $refundPercentage, 2);
     }
 }

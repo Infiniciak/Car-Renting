@@ -70,9 +70,14 @@ class RentalController extends Controller
         $car = Car::findOrFail($validated['car_id']);
         if (!$car->isAvailable()) {
             return response()->json([
-                'message' => 'Samochód nie jest dostępny'
+                'message' => 'Samochód nie jest dostępny w wybranym terminie'
             ], 422);
         }
+
+        $user = User::findOrFail($validated['user_id']);
+        $startDate = Carbon::parse($validated['start_date']);
+
+        $status = $startDate->isToday() ? 'active' : 'reserved';
 
         $days = Carbon::parse($validated['start_date'])
             ->diffInDays(Carbon::parse($validated['planned_end_date']));
@@ -84,57 +89,61 @@ class RentalController extends Controller
         );
 
         $basePrice = $car->getPriceWithDiscount() * $days;
-        $distanceFee = $distance * 1; // 1 zł za km
+        $distanceFee = $distance * 2;
         $insurancePrice = $car->insurance_per_day * $days;
 
-        // Promocje dla stałych klientów (zadanie 18)
-        $user = User::findOrFail($validated['user_id']);
-        $userRentalCount = $user->rentals()->where('status', 'completed')->count() + 1;
+        $userRentalCount = $user->rentals()
+            ->whereIn('status', ['completed', 'active', 'early_return'])
+            ->count() + 1;
         $discountAmount = $this->calculateLoyaltyDiscount($userRentalCount, $basePrice);
 
         $totalPrice = $basePrice + $insurancePrice + $distanceFee - $discountAmount;
 
         if (!$user->hasEnoughBalance($totalPrice)) {
             return response()->json([
-                'message' => 'Niewystarczające saldo. Potrzebne: ' . $totalPrice . ' zł, dostępne: ' . $user->balance . ' zł'
+                'message' => "Niewystarczające saldo. Potrzebne: {$totalPrice} zł, dostępne: {$user->balance} zł"
             ], 422);
         }
 
-        $rental = Rental::create([
-            'user_id' => $validated['user_id'],
-            'car_id' => $validated['car_id'],
-            'rental_point_start_id' => $validated['rental_point_start_id'],
-            'rental_point_end_id' => $validated['rental_point_end_id'],
-            'start_date' => $validated['start_date'],
-            'planned_end_date' => $validated['planned_end_date'],
-            'distance_km' => $distance,
-            'base_price' => $basePrice,
-            'insurance_price' => $insurancePrice,
-            'distance_fee' => $distanceFee,
-            'discount_amount' => $discountAmount,
-            'total_price' => $totalPrice,
-            'status' => 'active',
-            'user_rental_count' => $userRentalCount,
-            'notes' => $validated['notes'] ?? null,
-        ]);
+        return \DB::transaction(function () use ($validated, $user, $car, $status, $distance, $basePrice, $insurancePrice, $distanceFee, $discountAmount, $totalPrice, $userRentalCount) {
 
-        $user->deductBalance($totalPrice);
-        $car->update(['status' => 'rented']);
+            $rental = Rental::create([
+                'user_id' => $validated['user_id'],
+                'car_id' => $validated['car_id'],
+                'rental_point_start_id' => $validated['rental_point_start_id'],
+                'rental_point_end_id' => $validated['rental_point_end_id'],
+                'start_date' => $validated['start_date'],
+                'planned_end_date' => $validated['planned_end_date'],
+                'distance_km' => $distance,
+                'base_price' => $basePrice,
+                'insurance_price' => $insurancePrice,
+                'distance_fee' => $distanceFee,
+                'discount_amount' => $discountAmount,
+                'total_price' => $totalPrice,
+                'status' => $status,
+                'user_rental_count' => $userRentalCount,
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-        Transaction::create([
-            'user_id' => $user->id,
-            'rental_id' => $rental->id,
-            'rental_point_id' => $validated['rental_point_start_id'],
-            'type' => Transaction::TYPE_RENTAL,
-            'amount' => -$totalPrice,
-            'balance_after' => $user->balance,
-            'description' => "Wypożyczenie {$car->brand} {$car->model} ({$rental->id})",
-        ]);
+            $user->deductBalance($totalPrice);
 
-        return response()->json([
-            'message' => 'Wypożyczenie utworzone pomyślnie',
-            'rental' => $rental->load(['user', 'car', 'rentalPointStart', 'rentalPointEnd'])
-        ], 201);
+            $car->update(['status' => ($status === 'active' ? 'rented' : 'reserved')]);
+
+            Transaction::create([
+                'user_id' => $user->id,
+                'rental_id' => $rental->id,
+                'rental_point_id' => $validated['rental_point_start_id'],
+                'type' => Transaction::TYPE_RENTAL,
+                'amount' => -$totalPrice,
+                'balance_after' => $user->balance,
+                'description' => "Wynajem: {$car->brand} {$car->model} (Status: {$status})",
+            ]);
+
+            return response()->json([
+                'message' => $status === 'active' ? 'Wypożyczenie rozpoczęte' : 'Samochód został zarezerwowany',
+                'rental' => $rental->load(['user', 'car', 'rentalPointStart', 'rentalPointEnd'])
+            ], 201);
+        });
     }
 
     public function update(Request $request, Rental $rental)
@@ -161,9 +170,9 @@ class RentalController extends Controller
 
     public function destroy(Rental $rental)
     {
-        if ($rental->status === 'active') {
+        if (in_array($rental->status, ['active', 'reserved'])) {
             return response()->json([
-                'message' => 'Nie można usunąć aktywnego wypożyczenia. Najpierw anuluj.'
+                'message' => 'Nie można usunąć aktywnej lub zarezerwowanej rezerwacji. Najpierw użyj opcji "Anuluj", aby system zwrócił środki użytkownikowi.'
             ], 422);
         }
 
@@ -174,13 +183,10 @@ class RentalController extends Controller
         ]);
     }
 
-    // Wcześniejszy zwrot z częściowym zwrotem kosztów (zadanie 17)
     public function cancel(Request $request, Rental $rental)
     {
         if (!$rental->canBeCancelled()) {
-            return response()->json([
-                'message' => 'To wypożyczenie nie może być anulowane'
-            ], 422);
+            return response()->json(['message' => 'To wypożyczenie nie może być anulowane'], 422);
         }
 
         $validated = $request->validate([
@@ -190,13 +196,14 @@ class RentalController extends Controller
         $now = now();
         $startDate = Carbon::parse($rental->start_date);
 
-        $newStatus = $now->lt($startDate) ? 'cancelled' : 'early_return';
+        $isReserved = ($rental->status === 'reserved' || $now->lt($startDate));
+        $newStatus = $isReserved ? 'cancelled' : 'early_return';
 
         $refundAmount = $rental->calculateEarlyReturnRefund();
 
         $rental->update([
             'status' => $newStatus,
-            'actual_end_date' => now(),
+            'actual_end_date' => $now,
             'cancellation_reason' => $validated['cancellation_reason'],
             'refund_amount' => $refundAmount,
         ]);
@@ -213,44 +220,19 @@ class RentalController extends Controller
                 'type' => Transaction::TYPE_REFUND,
                 'amount' => $refundAmount,
                 'balance_after' => $rental->user->balance,
-                'description' => "Zwrot za wcześniejsze oddanie wypożyczenia {$rental->id}",
+                'description' => $isReserved
+                    ? "Pełny zwrot za anulowanie rezerwacji #{$rental->id}"
+                    : "Zwrot za wcześniejsze oddanie auta #{$rental->id}",
             ]);
         }
 
         return response()->json([
-            'message' => 'Wypożyczenie anulowane. Zwrot: ' . $refundAmount . ' zł',
-            'rental' => $rental->fresh()->load(['user', 'car']),
+            'message' => $isReserved ? 'Rezerwacja anulowana' : 'Wypożyczenie zakończone przed czasem',
             'refund_amount' => $refundAmount,
+            'rental' => $rental->fresh()->load(['user', 'car']),
         ]);
     }
 
-    // Wzór Haversine - odległość między punktami GPS (zadanie 16)
-    private function calculateDistance($startPointId, $endPointId)
-    {
-        $start = RentalPoint::findOrFail($startPointId);
-        $end = RentalPoint::findOrFail($endPointId);
-
-        if (!$start->latitude || !$end->latitude) {
-            return 0;
-        }
-
-        $earthRadius = 6371; // km
-
-        $latFrom = deg2rad((float) $start->latitude);
-        $lonFrom = deg2rad((float) $start->longitude);
-        $latTo = deg2rad((float) $end->latitude);
-        $lonTo = deg2rad((float) $end->longitude);
-
-        $latDelta = $latTo - $latFrom;
-        $lonDelta = $lonTo - $lonFrom;
-
-        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
-            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
-
-        return round($angle * $earthRadius, 2);
-    }
-
-    // Rabaty: 10% co 5., 15% co 10., 20% co 15. wypożyczenie (zadanie 18)
     private function calculateLoyaltyDiscount($rentalCount, $basePrice)
     {
         if ($rentalCount % 15 === 0) {
@@ -266,5 +248,35 @@ class RentalController extends Controller
         }
 
         return 0;
+    }
+
+    private function calculateDistance($startPointId, $endPointId)
+    {
+
+        $start = RentalPoint::findOrFail($startPointId);
+        $end = RentalPoint::findOrFail($endPointId);
+
+        if (!$start->latitude || !$end->latitude) {
+            return 0;
+        }
+
+        $earthRadius = 6371;
+
+        $latFrom = deg2rad((float) $start->latitude);
+        $lonFrom = deg2rad((float) $start->longitude);
+        $latTo = deg2rad((float) $end->latitude);
+        $lonTo = deg2rad((float) $end->longitude);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+
+        $straightDistance = $angle * $earthRadius;
+
+        $roadDistance = $straightDistance * 1.2;
+
+        return round($roadDistance, 2);
     }
 }

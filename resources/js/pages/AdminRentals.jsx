@@ -191,8 +191,19 @@ const AdminRentals = () => {
     };
 
     const handleCarSelect = (car) => {
-        setFormData({...formData, car_id: car.id});
+        setFormData({
+            ...formData,
+            car_id: car.id,
+            rental_point_start_id: car.rental_point_id
+        });
+
         setCarSearch(`${car.brand} ${car.model} (${car.registration_number})`);
+
+        const carPoint = points.find(p => p.id === car.rental_point_id);
+        if (carPoint) {
+            setStartPointSearch(carPoint.name);
+        }
+
         setShowCarDropdown(false);
     };
 
@@ -210,12 +221,14 @@ const AdminRentals = () => {
 
     const getStatusBadge = (status) => {
         const styles = {
+            reserved: 'bg-indigo-500/10 text-indigo-400',
             active: 'bg-emerald-500/10 text-emerald-400',
             completed: 'bg-blue-500/10 text-blue-400',
             cancelled: 'bg-gray-500/10 text-gray-400',
             early_return: 'bg-yellow-500/10 text-yellow-400'
         };
         const labels = {
+            reserved: 'Oczekujące',
             active: 'Aktywne',
             completed: 'Zakończone',
             cancelled: 'Anulowane',
@@ -341,17 +354,17 @@ const AdminRentals = () => {
                                                 {getStatusBadge(rental.status)}
                                             </div>
                                             <div className="flex flex-wrap gap-2 mb-3">
-                                                <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 font-bold">
-                                                    👤 {rental.user?.name}
+                                                <span className="text-[10px] bg-rose-500/20 px-2 py-1 rounded text-rose-400 font-bold">
+                                                    {rental.user?.name}
                                                 </span>
-                                                <span className="text-[10px] bg-indigo-500/20 px-2 py-1 rounded text-indigo-400 font-bold">
-                                                    🚙 {rental.car?.brand} {rental.car?.model}
+                                                <span className="text-[10px] bg-rose-500/20 px-2 py-1 rounded text-rose-400 font-bold">
+                                                    {rental.car?.brand} {rental.car?.model}
                                                 </span>
-                                                <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-blue-400 font-bold">
-                                                    📍 {rental.rental_point_start?.city} → {rental.rental_point_end?.city}
+                                                <span className="text-[10px] bg-rose-500/20 px-2 py-1 rounded text-rose-400 font-bold">
+                                                    {rental.rental_point_start?.city} → {rental.rental_point_end?.city}
                                                 </span>
-                                                <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 font-bold">
-                                                    📏 {rental.distance_km} km
+                                                <span className="text-[10px] bg-rose-500/20 px-2 py-1 rounded text-rose-400 font-bold">
+                                                   {rental.distance_km} km
                                                 </span>
                                             </div>
 
@@ -390,21 +403,23 @@ const AdminRentals = () => {
                                         </div>
                                     </div>
                                     <div className="flex gap-2 flex-shrink-0">
-                                        {rental.status === 'active' && (
+                                        {(rental.status === 'active' || rental.status === 'reserved') && (
                                             <button
                                                 onClick={() => handleCancel(rental.id)}
                                                 className="px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-xl font-bold text-sm"
                                             >
-                                                Anuluj
+                                               Anuluj i zwróć środki
                                             </button>
                                         )}
-                                        <button
-                                            onClick={() => handleOpenEditModal(rental)}
-                                            className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-sm"
-                                        >
-                                            Edytuj
-                                        </button>
-                                        {rental.status !== 'active' && (
+                                        {(rental.status === 'active' || rental.status === 'reserved') && (
+                                            <button
+                                                onClick={() => handleOpenEditModal(rental)}
+                                                className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-sm"
+                                            >
+                                                Edytuj
+                                            </button>
+                                        )}
+                                        {(rental.status === 'completed' || rental.status === 'cancelled' || rental.status === 'early_return') && (
                                             <button
                                                 onClick={() => handleDelete(rental.id)}
                                                 className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl font-bold text-sm"
@@ -468,7 +483,7 @@ const AdminRentals = () => {
                                         onChange={e => {
                                             setCarSearch(e.target.value);
                                             setShowCarDropdown(true);
-                                            if (!e.target.value) setFormData({...formData, car_id: ''});
+                                            if (!e.target.value) setFormData({ ...formData, car_id: '', rental_point_start_id: '' });
                                         }}
                                         onFocus={() => setShowCarDropdown(true)}
                                         placeholder="Wyszukaj samochód..."
@@ -492,35 +507,17 @@ const AdminRentals = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="relative">
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Punkt początkowy</label>
+                                    <div className="relative opacity-70">
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
+                                            Punkt początkowy
+                                        </label>
                                         <input
                                             type="text"
                                             value={startPointSearch}
-                                            onChange={e => {
-                                                setStartPointSearch(e.target.value);
-                                                setShowStartPointDropdown(true);
-                                                if (!e.target.value) setFormData({...formData, rental_point_start_id: ''});
-                                            }}
-                                            onFocus={() => setShowStartPointDropdown(true)}
-                                            placeholder="Wyszukaj punkt..."
-                                            className="bg-[#11111d] p-4 rounded-2xl border-none text-white w-full focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            required={!formData.rental_point_start_id}
+                                            readOnly
+                                            placeholder="Wybierz najpierw samochód..."
+                                            className="bg-[#0a0a14] p-4 rounded-2xl border border-white/5 text-gray-500 w-full outline-none cursor-not-allowed"
                                         />
-                                        {showStartPointDropdown && filteredStartPoints.length > 0 && (
-                                            <div className="absolute z-10 w-full mt-1 bg-[#11111d] border border-white/10 rounded-2xl shadow-2xl max-h-60 overflow-y-auto">
-                                                {filteredStartPoints.map(point => (
-                                                    <div
-                                                        key={point.id}
-                                                        onClick={() => handleStartPointSelect(point)}
-                                                        className="p-3 hover:bg-indigo-500/10 cursor-pointer border-b border-white/5 last:border-b-0"
-                                                    >
-                                                        <p className="font-bold text-sm text-white">{point.name}</p>
-                                                        <p className="text-xs text-gray-400">{point.city}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
                                     </div>
 
                                     <div className="relative">
@@ -531,7 +528,7 @@ const AdminRentals = () => {
                                             onChange={e => {
                                                 setEndPointSearch(e.target.value);
                                                 setShowEndPointDropdown(true);
-                                                if (!e.target.value) setFormData({...formData, rental_point_end_id: ''});
+                                                if (!e.target.value) setFormData({ ...formData, rental_point_end_id: '' });
                                             }}
                                             onFocus={() => setShowEndPointDropdown(true)}
                                             placeholder="Wyszukaj punkt..."
