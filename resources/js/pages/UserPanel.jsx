@@ -110,11 +110,19 @@ const UserPanel = ({ onLogout }) => {
                     </div>
 
                     {/* TWOJE REZERWACJE */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h2 className="text-xl font-bold mb-4">Twoje rezerwacje</h2>
-                        <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 rounded-xl">
-                            <p className="text-gray-400 italic text-sm">Brak aktywnych rezerwacji.</p>
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">Twoje Rezerwacje</h2>
+                            <p className="text-gray-500 text-sm mb-6">
+                                Zarządzaj swoimi aktualnymi wynajmami, przeglądaj historię podróży oraz monitoruj statusy płatności w jednym miejscu.
+                            </p>
                         </div>
+                        <button
+                            onClick={() => navigate('/user/rentals')}
+                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition"
+                        >
+                            Zobacz rezerwacje &rarr;
+                        </button>
                     </div>
 
                     {/* ZNAJDŹ NAS */}

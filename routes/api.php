@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Admin\CarController;
 use App\Http\Controllers\Admin\RentalController;
 use App\Http\Controllers\Admin\AdminStatsController;
+use App\Http\Controllers\Api\UserRentalController;
 
 // --- TRASY PUBLICZNE ---
 Route::post('/login', [ApiAuthController::class, 'login']);
@@ -48,6 +49,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/logout', [ApiAuthController::class, 'logout']);
+
+   Route::prefix('user')->group(function () {
+        Route::get('/rental-stats', [UserRentalController::class, 'getUserRentalCount']);
+        Route::post('/calculate-price', [UserRentalController::class, 'calculatePrice']);
+        Route::post('/rentals', [UserRentalController::class, 'store']);
+        Route::get('/rentals', [UserRentalController::class, 'myRentals']);
+        Route::post('/rentals/{rental}/cancel', [UserRentalController::class, 'cancel']);
+    });
 
     // --- TYLKO DLA ADMINA ---
     Route::middleware('role:admin')->prefix('admin')->group(function () {

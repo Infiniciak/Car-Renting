@@ -31,8 +31,7 @@ const CarDetails = () => {
         if (!isLoggedIn) {
             navigate('/login');
         } else {
-            // Logika dla zalogowanych - na razie tylko powiadomienie
-            alert("nie mozna zarezerwowac");
+            navigate(`/rental/${id}`);
         }
     };
 
