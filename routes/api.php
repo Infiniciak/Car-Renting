@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\CarController;
 use App\Http\Controllers\Admin\RentalController;
 use App\Http\Controllers\Admin\AdminStatsController;
 use App\Http\Controllers\Api\UserRentalController;
+use App\Http\Controllers\Admin\PromoCodeController;
 
 // --- TRASY PUBLICZNE ---
 Route::post('/login', [ApiAuthController::class, 'login']);
@@ -35,7 +36,7 @@ Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
 
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/top-up', [ProfileController::class, 'topUp']);
+    Route::post('/redeem-code', [ProfileController::class, 'redeemCode']);
 
     Route::get('/user', function (Request $request) {
         return $request->user();
@@ -84,5 +85,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
 
         Route::get('/stats', [AdminStatsController::class, 'index']);
+
+        Route::get('/promo-codes', [PromoCodeController::class, 'index']);
+        Route::post('/promo-codes', [PromoCodeController::class, 'store']);
+        Route::delete('/promo-codes/{promoCode}', [PromoCodeController::class, 'destroy']);
     });
 });

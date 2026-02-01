@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class PromoCode extends Model
 {
     use HasFactory;
+
+    protected $table = 'promo_codes';
 
     protected $fillable = [
         'code',
@@ -28,65 +31,45 @@ class PromoCode extends Model
         'expires_at' => 'datetime',
     ];
 
-    /**
-     * Użytkownik który użył kodu
-     */
     public function usedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'used_by_user_id');
     }
 
-    /**
-     * Admin który utworzył kod
-     */
     public function createdByAdmin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_admin_id');
     }
 
-    /**
-     * Sprawdź czy kod jest dostępny do użycia
-     */
-    public function isAvailable(): bool
+    public function isValid(): bool
     {
         if ($this->used) {
             return false;
         }
 
-        if ($this->expires_at && now()->isAfter($this->expires_at)) {
+        if ($this->expires_at && Carbon::now()->gt($this->expires_at)) {
+            $this->update(['used' => true]);
             return false;
         }
 
         return true;
     }
 
-    /**
-     * Użyj kodu
-     */
-    public function redeem(User $user): bool
+    public function markAsUsed(int $userId): void
     {
-        if (!$this->isAvailable()) {
-            return false;
-        }
-
         $this->update([
             'used' => true,
-            'used_by_user_id' => $user->id,
+            'used_by_user_id' => $userId,
             'used_at' => now(),
         ]);
+    }
 
-        // Dodaj saldo użytkownikowi
-        $user->increment('balance', (float) $this->amount);
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $code = 'RENT-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 4)) . '-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 4));
+        } while (self::where('code', $code)->exists());
 
-        // Utwórz transakcję
-        Transaction::create([
-            'user_id' => $user->id,
-            'type' => 'balance_add',
-            'amount' => $this->amount,
-            'balance_after' => $user->balance,
-            'description' => "Doładowanie konta kodem: {$this->code}",
-        ]);
-
-        return true;
+        return $code;
     }
 }
