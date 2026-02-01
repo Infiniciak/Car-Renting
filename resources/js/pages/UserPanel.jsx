@@ -5,7 +5,7 @@ import axios from 'axios';
 const UserPanel = ({ onLogout }) => {
     const navigate = useNavigate();
     const [balance, setBalance] = useState(0);
-    const [topUpAmount, setTopUpAmount] = useState(50);
+    const [topUpCode, setTopUpCode] = useState('');
     const [loading, setLoading] = useState(true);
 
     const fetchUserData = async () => {
@@ -26,17 +26,23 @@ const UserPanel = ({ onLogout }) => {
         fetchUserData();
     }, []);
 
-    const handleTopUp = async () => {
+    const handleRedeemCode = async () => {
+        if (!topUpCode.trim()) {
+            alert('Wpisz kod doładowania');
+            return;
+        }
+
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:8000/api/top-up',
-                { amount: topUpAmount },
+            const res = await axios.post('http://localhost:8000/api/redeem-code',
+                { code: topUpCode },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setBalance(res.data.new_balance);
-            alert(`Pomyślnie doładowano konto o ${topUpAmount} PLN!`);
+            setTopUpCode('');
+            alert(res.data.message);
         } catch (err) {
-            alert("Błąd podczas doładowania konta.");
+            alert(err.response?.data?.message || "Błąd podczas aktywacji kodu");
         }
     };
 
@@ -49,7 +55,6 @@ const UserPanel = ({ onLogout }) => {
 
     return (
         <div className="min-h-screen bg-gray-100">
-            {/* Nawigacja */}
             <nav className="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
                 <span className="text-xl font-black text-blue-600">CAR-RENT</span>
                 <div className="flex items-center gap-6">
@@ -69,14 +74,12 @@ const UserPanel = ({ onLogout }) => {
             </nav>
 
             <main className="p-8 max-w-6xl mx-auto">
-                {/* Hero Section */}
                 <div className="bg-blue-600 rounded-3xl p-10 text-white mb-8 shadow-lg shadow-blue-200">
                     <h1 className="text-4xl font-bold mb-2">Witaj w naszej wypożyczalni!</h1>
                     <p className="text-blue-100">Znajdź idealne auto na swoją kolejną podróż.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* SEKCJA PORTFELA */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
                         <div>
                             <h2 className="text-xl font-bold mb-1">Twój Portfel</h2>
@@ -90,26 +93,26 @@ const UserPanel = ({ onLogout }) => {
                         </div>
 
                         <div className="space-y-3">
-                            <select
-                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-semibold outline-none focus:border-blue-500 text-gray-700"
-                                value={topUpAmount}
-                                onChange={(e) => setTopUpAmount(e.target.value)}
-                            >
-                                <option value="20">20 PLN</option>
-                                <option value="50">50 PLN</option>
-                                <option value="100">100 PLN</option>
-                                <option value="200">200 PLN</option>
-                            </select>
+                            <input
+                                type="text"
+                                placeholder="Wpisz kod doładowania"
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-semibold outline-none focus:border-blue-500 text-gray-700 uppercase"
+                                value={topUpCode}
+                                onChange={(e) => setTopUpCode(e.target.value.toUpperCase())}
+                                maxLength={20}
+                            />
                             <button
-                                onClick={handleTopUp}
+                                onClick={handleRedeemCode}
                                 className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 transition shadow-md shadow-green-100"
                             >
-                                Doładuj konto
+                                Aktywuj kod
                             </button>
+                            <p className="text-xs text-gray-400 text-center">
+                                Otrzymasz kod od administratora
+                            </p>
                         </div>
                     </div>
 
-                    {/* TWOJE REZERWACJE */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 mb-2">Twoje Rezerwacje</h2>
@@ -125,7 +128,6 @@ const UserPanel = ({ onLogout }) => {
                         </button>
                     </div>
 
-                    {/* ZNAJDŹ NAS */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
@@ -142,7 +144,6 @@ const UserPanel = ({ onLogout }) => {
                     </div>
                 </div>
 
-                {/* DOLNA SEKCJA - SZYBKI WYBÓR */}
                 <div className="mt-8 bg-white p-8 rounded-3xl shadow-sm border border-gray-200 text-center">
                     <h2 className="text-2xl font-bold mb-4">Gotowy na drogę?</h2>
                     <button

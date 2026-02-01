@@ -17,6 +17,7 @@ import PublicCarListing from '../pages/PublicCarListing.jsx';
 import PublicCarDetails from '../pages/PublicCarDetails.jsx';
 import RentalBooking from '../pages/RentalBooking.jsx';
 import UserRentals from '../pages/UserRentals.jsx';
+import AdminPromoCodes from '../pages/AdminPromoCodes.jsx';
 
 
 // --- FUNKCJA POMOCNICZA: SPRAWDZANIE CZY TOKEN JEST PRAWIDŁOWY ---
@@ -100,6 +101,8 @@ function App() {
                 <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
                 <Route path="/offer" element={<PublicRentalPoints />} />
+                <Route path="/admin/promo-codes" element={<AdminPromoCodes allowedRole="admin"><AdminPanel onLogout={refreshAuth} /></AdminPromoCodes>} />
+
                 {/* ROLE: ADMIN */}
                 <Route path="/admin" element={
                     <ProtectedRoute allowedRole="admin">
