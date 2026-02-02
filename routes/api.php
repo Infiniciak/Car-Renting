@@ -37,6 +37,8 @@ Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/redeem-code', [ProfileController::class, 'redeemCode']);
+    Route::get('/my-promo-codes', [ProfileController::class, 'getUserCodes']);
+    Route::post('/my-promo-codes/{codeId}/use', [ProfileController::class, 'usePromoCode']);
 
     Route::get('/user', function (Request $request) {
         return $request->user();

@@ -5,15 +5,15 @@ import axios from 'axios';
 const UserPanel = ({ onLogout }) => {
     const navigate = useNavigate();
     const [balance, setBalance] = useState(0);
-    const [topUpCode, setTopUpCode] = useState('');
+    const [promoCodes, setPromoCodes] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const token = localStorage.getItem('token');
+    const config = { headers: { Authorization: `Bearer ${token}` } };
 
     const fetchUserData = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:8000/api/user', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await axios.get('http://localhost:8000/api/user', config);
             setBalance(res.data.balance);
             setLoading(false);
         } catch (err) {
@@ -22,24 +22,25 @@ const UserPanel = ({ onLogout }) => {
         }
     };
 
+    const fetchPromoCodes = async () => {
+        try {
+            const res = await axios.get('http://localhost:8000/api/my-promo-codes', config);
+            setPromoCodes(res.data);
+        } catch (err) {
+            console.error("Błąd pobierania kodów", err);
+        }
+    };
+
     useEffect(() => {
         fetchUserData();
+        fetchPromoCodes();
     }, []);
 
-    const handleRedeemCode = async () => {
-        if (!topUpCode.trim()) {
-            alert('Wpisz kod doładowania');
-            return;
-        }
-
+    const handleUseCode = async (codeId) => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:8000/api/redeem-code',
-                { code: topUpCode },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const res = await axios.post(`http://localhost:8000/api/my-promo-codes/${codeId}/use`, {}, config);
             setBalance(res.data.new_balance);
-            setTopUpCode('');
+            fetchPromoCodes();
             alert(res.data.message);
         } catch (err) {
             alert(err.response?.data?.message || "Błąd podczas aktywacji kodu");
@@ -92,24 +93,40 @@ const UserPanel = ({ onLogout }) => {
                             </div>
                         </div>
 
-                        <div className="space-y-3">
-                            <input
-                                type="text"
-                                placeholder="Wpisz kod doładowania"
-                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-semibold outline-none focus:border-blue-500 text-gray-700 uppercase"
-                                value={topUpCode}
-                                onChange={(e) => setTopUpCode(e.target.value.toUpperCase())}
-                                maxLength={20}
-                            />
-                            <button
-                                onClick={handleRedeemCode}
-                                className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 transition shadow-md shadow-green-100"
-                            >
-                                Aktywuj kod
-                            </button>
-                            <p className="text-xs text-gray-400 text-center">
-                                Otrzymasz kod od administratora
-                            </p>
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-700 mb-3">Twoje Kody Doładowania</h3>
+                            {promoCodes.length === 0 ? (
+                                <p className="text-xs text-gray-400 text-center py-4">Brak dostępnych kodów</p>
+                            ) : (
+                                <div className="space-y-2 max-h-[90px] overflow-y-auto">
+                                    {promoCodes.map(code => (
+                                        <div key={code.id} className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="font-mono text-xs font-bold text-gray-700">{code.code}</span>
+                                                {code.used ? (
+                                                    <span className="text-xs px-2 py-1 bg-gray-300 text-gray-600 rounded-full font-bold">Użyty</span>
+                                                ) : (
+                                                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-bold">Dostępny</span>
+                                                )}
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xl font-black text-green-600">{code.amount} PLN</span>
+                                                {!code.used && (
+                                                    <button
+                                                        onClick={() => handleUseCode(code.id)}
+                                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition"
+                                                    >
+                                                        Użyj
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {code.description && (
+                                                <p className="text-xs text-gray-500 mt-2">{code.description}</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
