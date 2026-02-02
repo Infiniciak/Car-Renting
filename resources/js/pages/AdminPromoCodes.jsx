@@ -3,19 +3,24 @@ import axios from 'axios';
 
 const AdminPromoCodes = () => {
     const [codes, setCodes] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
+        user_id: '',
         amount: 100,
         expires_at: '',
         description: ''
     });
+    const [userSearch, setUserSearch] = useState('');
+    const [showUserDropdown, setShowUserDropdown] = useState(false);
 
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
     useEffect(() => {
         fetchCodes();
+        fetchUsers();
     }, []);
 
     const fetchCodes = async () => {
@@ -29,13 +34,24 @@ const AdminPromoCodes = () => {
         }
     };
 
+    const fetchUsers = async () => {
+        try {
+            const res = await axios.get('http://localhost:8000/api/admin/users', config);
+            setUsers(res.data.data || res.data);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             await axios.post('http://localhost:8000/api/admin/promo-codes', formData, config);
             setIsModalOpen(false);
-            setFormData({ amount: 100, expires_at: '', description: '' });
+            setFormData({ user_id: '', amount: 100, expires_at: '', description: '' });
+            setUserSearch('');
             fetchCodes();
+            alert('Kod wygenerowany i wysłany do użytkownika!');
         } catch (error) {
             alert(error.response?.data?.message || 'Błąd generowania kodu');
         }
@@ -50,6 +66,17 @@ const AdminPromoCodes = () => {
             alert(error.response?.data?.message || 'Błąd usuwania');
         }
     };
+
+    const handleUserSelect = (user) => {
+        setFormData({...formData, user_id: user.id});
+        setUserSearch(user.name + ' (' + user.email + ')');
+        setShowUserDropdown(false);
+    };
+
+    const filteredUsers = users.filter(user =>
+        user.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+        user.email?.toLowerCase().includes(userSearch.toLowerCase())
+    );
 
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code);
@@ -84,7 +111,7 @@ const AdminPromoCodes = () => {
                         onClick={() => setIsModalOpen(true)}
                         className="bg-indigo-600 hover:bg-indigo-700 px-6 py-4 rounded-2xl font-black transition-all"
                     >
-                        + GENERUJ KOD
+                        + WYŚLIJ KOD
                     </button>
                 </div>
 
@@ -114,8 +141,9 @@ const AdminPromoCodes = () => {
                                                 <p className="text-emerald-400 text-xl font-black">{code.amount} PLN</p>
                                             </div>
                                             <div>
-                                                <p className="text-gray-400 text-xs uppercase font-bold mb-1">Status</p>
-                                                <p className="text-gray-300 font-bold">{code.used ? 'Wykorzystany' : 'Dostępny'}</p>
+                                                <p className="text-gray-400 text-xs uppercase font-bold mb-1">Wysłany do</p>
+                                                <p className="text-gray-300 font-bold text-sm">{code.sent_to_user?.name || code.used_by_user?.name || 'N/A'}</p>
+                                                <p className="text-gray-500 text-xs">{code.sent_to_user?.email || code.used_by_user?.email}</p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-400 text-xs uppercase font-bold mb-1">Utworzony</p>
@@ -165,9 +193,40 @@ const AdminPromoCodes = () => {
                 <div className="fixed inset-0 z-50 overflow-y-auto bg-black/90 backdrop-blur-md">
                     <div className="flex min-h-full items-center justify-center p-4">
                         <div className="bg-[#1e1e2d] p-10 rounded-[3rem] border border-white/10 max-w-md w-full">
-                            <h2 className="text-3xl font-black mb-8 uppercase tracking-tighter">Generuj Kod</h2>
+                            <h2 className="text-3xl font-black mb-8 uppercase tracking-tighter">Wyślij Kod Do Użytkownika</h2>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="relative">
+                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Użytkownik</label>
+                                    <input
+                                        type="text"
+                                        value={userSearch}
+                                        onChange={e => {
+                                            setUserSearch(e.target.value);
+                                            setShowUserDropdown(true);
+                                            if (!e.target.value) setFormData({...formData, user_id: ''});
+                                        }}
+                                        onFocus={() => setShowUserDropdown(true)}
+                                        placeholder="Wpisz nazwę lub email..."
+                                        className="w-full p-4 bg-[#11111d] rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        required={!formData.user_id}
+                                    />
+                                    {showUserDropdown && userSearch && filteredUsers.length > 0 && (
+                                        <div className="absolute z-10 w-full mt-1 bg-[#11111d] border border-white/10 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
+                                            {filteredUsers.map(user => (
+                                                <div
+                                                    key={user.id}
+                                                    onClick={() => handleUserSelect(user)}
+                                                    className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-b-0 transition"
+                                                >
+                                                    <p className="font-bold text-sm text-white">{user.name}</p>
+                                                    <p className="text-xs text-gray-400">{user.email}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div>
                                     <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Kwota (PLN)</label>
                                     <input
@@ -207,12 +266,17 @@ const AdminPromoCodes = () => {
                                     <button
                                         type="submit"
                                         className="flex-1 bg-indigo-600 hover:bg-indigo-700 py-4 rounded-2xl font-black uppercase"
+                                        disabled={!formData.user_id}
                                     >
-                                        Generuj
+                                        Wyślij Kod
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setIsModalOpen(false)}
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            setUserSearch('');
+                                            setFormData({ user_id: '', amount: 100, expires_at: '', description: '' });
+                                        }}
                                         className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-bold uppercase"
                                     >
                                         Anuluj

@@ -43,6 +43,7 @@ const AdminPanel = ({ onLogout }) => {
                     >
                         Ustawienia Profilu
                     </button>
+
                      <button
                         onClick={() => navigate('/admin/promo-codes')}
                         className="text-gray-600 hover:text-indigo-600 font-semibold transition"

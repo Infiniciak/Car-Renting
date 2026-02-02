@@ -10,7 +10,7 @@ class PromoCodeController extends Controller
 {
     public function index()
     {
-        $codes = PromoCode::with(['createdByAdmin', 'usedByUser'])
+        $codes = PromoCode::with(['createdByAdmin', 'usedByUser', 'sentToUser'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -20,6 +20,7 @@ class PromoCodeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
             'amount' => 'required|numeric|min:1|max:10000',
             'expires_at' => 'nullable|date|after:now',
             'description' => 'nullable|string|max:255',
@@ -28,15 +29,17 @@ class PromoCodeController extends Controller
         $code = PromoCode::create([
             'code' => PromoCode::generateUniqueCode(),
             'amount' => $validated['amount'],
+            'used_by_user_id' => $validated['user_id'],
             'expires_at' => $validated['expires_at'] ?? null,
             'description' => $validated['description'] ?? null,
             'created_by_admin_id' => auth()->id(),
             'used' => false,
+            'used_at' => null,
         ]);
 
         return response()->json([
-            'message' => 'Kod wygenerowany pomyślnie',
-            'code' => $code
+            'message' => 'Kod wygenerowany i wysłany do użytkownika',
+            'code' => $code->load(['sentToUser', 'createdByAdmin'])
         ], 201);
     }
 

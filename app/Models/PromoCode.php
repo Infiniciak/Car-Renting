@@ -27,18 +27,23 @@ class PromoCode extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'used' => 'boolean',
-        'used_at' => 'datetime',
         'expires_at' => 'datetime',
+        'used_at' => 'datetime',
     ];
+
+    public function createdByAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_admin_id');
+    }
 
     public function usedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'used_by_user_id');
     }
 
-    public function createdByAdmin(): BelongsTo
+    public function sentToUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_admin_id');
+        return $this->belongsTo(User::class, 'used_by_user_id');
     }
 
     public function isValid(): bool
@@ -55,11 +60,15 @@ class PromoCode extends Model
         return true;
     }
 
-    public function markAsUsed(int $userId): void
+    public function canBeUsedBy(int $userId): bool
+    {
+        return $this->used_by_user_id == $userId && !$this->used;
+    }
+
+    public function markAsUsed(): void
     {
         $this->update([
             'used' => true,
-            'used_by_user_id' => $userId,
             'used_at' => now(),
         ]);
     }
