@@ -29,6 +29,10 @@ class PublicCarController extends Controller
                 $query->where('fuel_type', $request->fuel_type);
             }
 
+            if ($request->filled('rental_point_id')) {
+                $query->where('rental_point_id', $request->rental_point_id);
+            }
+
             return response()->json($query->paginate(9));
 
         } catch (\Exception $e) {
