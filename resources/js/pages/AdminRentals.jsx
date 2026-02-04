@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import PaginationDark from '../components/PaginationDark';
 
 const AdminRentals = () => {
     const [rentals, setRentals] = useState([]);
@@ -11,6 +12,13 @@ const AdminRentals = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRental, setEditingRental] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        total: 0,
+        per_page: 10
+    });
 
     const [formData, setFormData] = useState({
         user_id: '',
@@ -41,11 +49,11 @@ const AdminRentals = () => {
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
-    useEffect(() => {
-        fetchData();
+   useEffect(() => {
+        fetchData(1);
     }, [filters]);
 
-   const fetchData = async () => {
+   const fetchData = async (page = 1) => {
         try {
             const cleanFilters = {};
             if (filters.status) cleanFilters.status = filters.status;
@@ -55,14 +63,20 @@ const AdminRentals = () => {
             const [rentalsRes, usersRes, carsRes, pointsRes] = await Promise.all([
                 axios.get('http://localhost:8000/api/admin/rentals', {
                     ...config,
-                    params: cleanFilters
+                    params: { ...cleanFilters, page }
                 }),
                 axios.get('http://localhost:8000/api/admin/users', config),
                 axios.get('http://localhost:8000/api/admin/cars', config),
                 axios.get('http://localhost:8000/api/admin/rental-points', config)
             ]);
 
-            setRentals(rentalsRes.data.data || rentalsRes.data || []);
+            setRentals(rentalsRes.data.data || []);
+            setPagination({
+                current_page: rentalsRes.data.current_page,
+                last_page: rentalsRes.data.last_page,
+                total: rentalsRes.data.total,
+                per_page: rentalsRes.data.per_page
+            });
             setUsers(usersRes.data || []);
             setCars(carsRes.data || []);
             setPoints(pointsRes.data || []);
@@ -78,7 +92,6 @@ const AdminRentals = () => {
         resetForm();
         setIsModalOpen(true);
     };
-
 
     const handleOpenEditModal = (rental) => {
         setEditingRental(rental);
@@ -163,6 +176,39 @@ const AdminRentals = () => {
         }
     };
 
+    const handleApproveReturn = async (rentalId) => {
+        const notes = prompt('Opcjonalnie dodaj notatkę (np. "Stan idealny"):');
+
+        try {
+            await axios.post(
+                `http://localhost:8000/api/admin/rentals/${rentalId}/approve-return`,
+                { notes: notes || '' },
+                config
+            );
+            fetchData();
+            alert('Zwrot zatwierdzony!');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Błąd');
+        }
+    };
+
+    const handleRejectReturn = async (rentalId) => {
+        const reason = prompt('Powód odrzucenia (np. "Brak paliwa"):');
+        if (!reason) return;
+
+        try {
+            await axios.post(
+                `http://localhost:8000/api/admin/rentals/${rentalId}/reject-return`,
+                { reason },
+                config
+            );
+            fetchData();
+            alert('Zwrot odrzucony. Klient musi poprawić.');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Błąd');
+        }
+    };
+
     const filteredUsers = (users || []).filter(user =>
         user.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
         user.email?.toLowerCase().includes(userSearch.toLowerCase())
@@ -225,14 +271,16 @@ const AdminRentals = () => {
             active: 'bg-emerald-500/10 text-emerald-400',
             completed: 'bg-blue-500/10 text-blue-400',
             cancelled: 'bg-gray-500/10 text-gray-400',
-            early_return: 'bg-yellow-500/10 text-yellow-400'
+            early_return: 'bg-yellow-500/10 text-yellow-400',
+            pending_return: 'bg-orange-500/10 text-orange-400'
         };
         const labels = {
             reserved: 'Oczekujące',
             active: 'Aktywne',
             completed: 'Zakończone',
             cancelled: 'Anulowane',
-            early_return: 'Wcześniejszy zwrot'
+            early_return: 'Wcześniejszy zwrot',
+            pending_return: 'Oczekuje zwrotu'
         };
         return (
             <span className={`text-[10px] px-2 py-1 rounded uppercase font-bold ${styles[status] || 'bg-white/5 text-gray-400'}`}>
@@ -257,7 +305,6 @@ const AdminRentals = () => {
             || endCity.includes(searchLower)
             || rentalId.includes(searchLower);
     });
-
 
     if (loading) return (
         <div className="min-h-screen bg-[#11111d] flex items-center justify-center text-white italic">
@@ -290,7 +337,6 @@ const AdminRentals = () => {
                 </div>
 
                 <div className="bg-[#1e1e2d] p-4 rounded-2xl border border-white/10 mb-6">
-                    {/* Zmieniamy flex na grid z 4 kolumnami */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
                         <select
                             value={filters.status}
@@ -298,7 +344,9 @@ const AdminRentals = () => {
                             className="bg-[#11111d] p-3 rounded-xl border border-white/5 text-gray-400 outline-none w-full cursor-pointer hover:border-white/10 transition-colors"
                         >
                             <option value="">Wszystkie statusy</option>
+                            <option value="reserved">Oczekujące</option>
                             <option value="active">Aktywne</option>
+                            <option value="pending_return">Oczekuje zwrotu</option>
                             <option value="completed">Zakończone</option>
                             <option value="cancelled">Anulowane</option>
                             <option value="early_return">Wcześniejszy zwrot</option>
@@ -402,23 +450,41 @@ const AdminRentals = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 flex-shrink-0">
-                                        {(rental.status === 'active' || rental.status === 'reserved') && (
-                                            <button
-                                                onClick={() => handleCancel(rental.id)}
-                                                className="px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-xl font-bold text-sm"
-                                            >
-                                               Anuluj i zwróć środki
-                                            </button>
+                                    <div className="flex gap-2 flex-shrink-0 flex-wrap">
+                                        {rental.status === 'pending_return' && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleApproveReturn(rental.id)}
+                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm"
+                                                >
+                                                    Zatwierdź zwrot
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRejectReturn(rental.id)}
+                                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm"
+                                                >
+                                                    Odrzuć
+                                                </button>
+                                            </>
                                         )}
+
                                         {(rental.status === 'active' || rental.status === 'reserved') && (
-                                            <button
-                                                onClick={() => handleOpenEditModal(rental)}
-                                                className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-sm"
-                                            >
-                                                Edytuj
-                                            </button>
+                                            <>
+                                                <button
+                                                    onClick={() => handleCancel(rental.id)}
+                                                    className="px-4 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-xl font-bold text-sm"
+                                                >
+                                                   Anuluj i zwróć środki
+                                                </button>
+                                                <button
+                                                    onClick={() => handleOpenEditModal(rental)}
+                                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-sm"
+                                                >
+                                                    Edytuj
+                                                </button>
+                                            </>
                                         )}
+
                                         {(rental.status === 'completed' || rental.status === 'cancelled' || rental.status === 'early_return') && (
                                             <button
                                                 onClick={() => handleDelete(rental.id)}
@@ -606,6 +672,13 @@ const AdminRentals = () => {
                     </div>
                 </div>
             )}
+            <PaginationDark
+                currentPage={pagination.current_page}
+                lastPage={pagination.last_page}
+                total={pagination.total}
+                perPage={pagination.per_page}
+                onPageChange={fetchData}
+            />
         </div>
     );
 };

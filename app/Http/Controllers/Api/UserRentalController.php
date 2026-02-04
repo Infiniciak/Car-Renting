@@ -189,7 +189,7 @@ class UserRentalController extends Controller
         $rentals = $user->rentals()
             ->with(['car', 'rentalPointStart', 'rentalPointEnd'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         return response()->json($rentals);
     }
@@ -276,5 +276,28 @@ class UserRentalController extends Controller
                 'status' => $newStatus
             ]);
         });
+    }
+
+    public function requestReturn(Request $request, Rental $rental)
+    {
+        $user = $request->user();
+
+        if ($rental->user_id !== $user->id) {
+            return response()->json(['message' => 'To nie Twoje wypożyczenie'], 403);
+        }
+
+        if ($rental->status !== 'active') {
+            return response()->json(['message' => 'Można zakończyć tylko aktywne wypożyczenie'], 422);
+        }
+
+        $rental->update([
+            'status' => 'pending_return',
+            'actual_end_date' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Zgłoszono zwrot pojazdu. Oczekuj na weryfikację przez pracownika.',
+            'rental' => $rental->fresh()
+        ]);
     }
 }

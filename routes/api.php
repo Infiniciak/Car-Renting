@@ -53,6 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/logout', [ApiAuthController::class, 'logout']);
 
+    Route::post('/user/rentals/{rental}/request-return', [UserRentalController::class, 'requestReturn']);
+
    Route::prefix('user')->group(function () {
         Route::get('/rental-stats', [UserRentalController::class, 'getUserRentalCount']);
         Route::post('/calculate-price', [UserRentalController::class, 'calculatePrice']);
@@ -91,5 +93,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/promo-codes', [PromoCodeController::class, 'index']);
         Route::post('/promo-codes', [PromoCodeController::class, 'store']);
         Route::delete('/promo-codes/{promoCode}', [PromoCodeController::class, 'destroy']);
+
+        Route::post('/rentals/{rental}/approve-return', [RentalController::class, 'approveReturn']);
+        Route::post('/rentals/{rental}/reject-return', [RentalController::class, 'rejectReturn']);
     });
 });

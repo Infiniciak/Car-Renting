@@ -10,6 +10,7 @@ use App\Models\RentalPoint;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class RentalController extends Controller
 {
@@ -37,7 +38,7 @@ class RentalController extends Controller
             });
         }
 
-        $rentals = $query->orderBy('created_at', 'desc')->paginate(20);
+        $rentals = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return response()->json($rentals);
     }
@@ -278,5 +279,56 @@ class RentalController extends Controller
         $roadDistance = $straightDistance * 1.2;
 
         return round($roadDistance, 2);
+    }
+
+    public function approveReturn(Request $request, Rental $rental)
+    {
+        if ($rental->status !== 'pending_return') {
+            return response()->json(['message' => 'Ten zwrot nie oczekuje na weryfikację'], 422);
+        }
+
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        DB::transaction(function () use ($rental, $validated) {
+            $rental->update([
+                'status' => 'completed',
+                'notes' => isset($validated['notes'])
+                    ? ($rental->notes ? $rental->notes . "\n\nZwrot: " . $validated['notes'] : "Zwrot: " . $validated['notes'])
+                    : $rental->notes,
+            ]);
+
+            $rental->car->update(['status' => 'available']);
+        });
+
+        return response()->json([
+            'message' => 'Zwrot zatwierdzony. Auto dostępne do wynajmu.',
+            'rental' => $rental->fresh()
+        ]);
+    }
+
+    public function rejectReturn(Request $request, Rental $rental)
+    {
+        if ($rental->status !== 'pending_return') {
+            return response()->json(['message' => 'Ten zwrot nie oczekuje na weryfikację'], 422);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $rental->update([
+            'status' => 'active',
+            'actual_end_date' => null,
+            'notes' => $rental->notes
+                ? $rental->notes . "\n\nOdrzucono zwrot: " . $validated['reason']
+                : "Odrzucono zwrot: " . $validated['reason'],
+        ]);
+
+        return response()->json([
+            'message' => 'Zwrot odrzucony. Klient musi poprawić.',
+            'rental' => $rental->fresh()
+        ]);
     }
 }

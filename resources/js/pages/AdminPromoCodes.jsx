@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import PaginationDark from '../components/PaginationDark';
 
 const AdminPromoCodes = () => {
     const [codes, setCodes] = useState([]);
@@ -15,21 +16,41 @@ const AdminPromoCodes = () => {
     const [userSearch, setUserSearch] = useState('');
     const [showUserDropdown, setShowUserDropdown] = useState(false);
 
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        total: 0,
+         per_page: 10
+    });
+
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
     useEffect(() => {
-        fetchCodes();
+        fetchCodes(1);
         fetchUsers();
     }, []);
 
-    const fetchCodes = async () => {
+   const fetchCodes = async (page = 1) => {
         try {
-            const res = await axios.get('http://localhost:8000/api/admin/promo-codes', config);
-            setCodes(res.data);
+            const res = await axios.get(`http://localhost:8000/api/admin/promo-codes?page=${page}`, config);
+
+            if (res.data.data) {
+                setCodes(res.data.data || []);
+                setPagination({
+                    current_page: res.data.current_page || 1,
+                    last_page: res.data.last_page || 1,
+                    total: res.data.total || 0,
+                    per_page: res.data.per_page || 10
+                });
+            } else {
+                setCodes(res.data || []);
+            }
+
             setLoading(false);
         } catch (error) {
             console.error('Error fetching codes:', error);
+            setCodes([]);
             setLoading(false);
         }
     };
@@ -50,7 +71,7 @@ const AdminPromoCodes = () => {
             setIsModalOpen(false);
             setFormData({ user_id: '', amount: 100, expires_at: '', description: '' });
             setUserSearch('');
-            fetchCodes();
+            fetchCodes(pagination.current_page);  // ← Zmień na pagination.current_page
             alert('Kod wygenerowany i wysłany do użytkownika!');
         } catch (error) {
             alert(error.response?.data?.message || 'Błąd generowania kodu');
@@ -61,7 +82,7 @@ const AdminPromoCodes = () => {
         if (!window.confirm('Usunąć ten kod?')) return;
         try {
             await axios.delete(`http://localhost:8000/api/admin/promo-codes/${id}`, config);
-            fetchCodes();
+            fetchCodes(pagination.current_page);  // ← Zmień na pagination.current_page
         } catch (error) {
             alert(error.response?.data?.message || 'Błąd usuwania');
         }
@@ -194,8 +215,18 @@ const AdminPromoCodes = () => {
                                 </div>
                             </div>
                         ))
-                    )}
+                   )}
                 </div>
+
+                {pagination.last_page > 1 && (
+                    <PaginationDark
+                        currentPage={pagination.current_page}
+                        lastPage={pagination.last_page}
+                        total={pagination.total}
+                        perPage={pagination.per_page}
+                        onPageChange={fetchCodes}
+                    />
+                )}
             </div>
 
             {isModalOpen && (
