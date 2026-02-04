@@ -31,6 +31,21 @@ class PromoCode extends Model
         'used_at' => 'datetime',
     ];
 
+    protected $appends = ['status'];
+
+    public function getStatusAttribute(): string
+{
+    if ($this->used) {
+        return 'used';
+    }
+
+    if ($this->expires_at && now()->gt($this->expires_at)) {
+        return 'expired';
+    }
+
+    return 'active';
+}
+
     public function createdByAdmin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_admin_id');
@@ -53,7 +68,6 @@ class PromoCode extends Model
         }
 
         if ($this->expires_at && Carbon::now()->gt($this->expires_at)) {
-            $this->update(['used' => true]);
             return false;
         }
 
