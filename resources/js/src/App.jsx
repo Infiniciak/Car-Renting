@@ -16,6 +16,7 @@ import AdminDashboard from '../pages/AdminDashboard.jsx';
 import PublicCarListing from '../pages/PublicCarListing.jsx';
 import PublicCarDetails from '../pages/PublicCarDetails.jsx';
 import CarComparison from '../pages/CarComparison.jsx';
+import CarWizard from '../pages/CarWizard.jsx';
 import RentalBooking from '../pages/RentalBooking.jsx';
 import UserRentals from '../pages/UserRentals.jsx';
 import AdminPromoCodes from '../pages/AdminPromoCodes.jsx';
@@ -71,6 +72,7 @@ function App() {
                 <Route path="/cars" element={<PublicCarListing />} />
                 <Route path="/car/:id" element={<PublicCarDetails />} />
                 <Route path="/compare" element={<CarComparison />} />
+                <Route path="/wizard" element={<CarWizard />} />
                 <Route path="/rental/:carId" element={<RentalBooking />} />
                 <Route path="/user/rentals" element={<UserRentals />} />
 
