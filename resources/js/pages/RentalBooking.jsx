@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const RentalBooking = () => {
     const { carId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
     const STORAGE_URL = 'http://localhost:8000/storage/';
@@ -19,7 +21,8 @@ const RentalBooking = () => {
         rental_point_end_id: '',
         start_date: '',
         planned_end_date: '',
-        notes: ''
+        notes: '',
+        use_extra_insurance: location.state?.extraInsurance || false
     });
 
     const [endPointSearch, setEndPointSearch] = useState('');
@@ -34,7 +37,7 @@ const RentalBooking = () => {
         if (formData.rental_point_end_id && formData.start_date && formData.planned_end_date && car) {
             calculatePrice();
         }
-    }, [formData.rental_point_end_id, formData.start_date, formData.planned_end_date]);
+    }, [formData.rental_point_end_id, formData.start_date, formData.planned_end_date, formData.use_extra_insurance]);
 
     const fetchData = async () => {
         try {
@@ -49,7 +52,7 @@ const RentalBooking = () => {
             setRentalStats(statsRes.data);
             setLoading(false);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error:', error);
             setLoading(false);
         }
     };
@@ -62,34 +65,31 @@ const RentalBooking = () => {
                 rental_point_start_id: car.rental_point_id,
                 rental_point_end_id: formData.rental_point_end_id,
                 start_date: formData.start_date,
-                planned_end_date: formData.planned_end_date
+                planned_end_date: formData.planned_end_date,
+                use_extra_insurance: formData.use_extra_insurance
             }, config);
 
             setPriceCalculation(res.data);
             setCalculating(false);
         } catch (error) {
-            console.error('Error calculating price:', error);
+            console.error('Calculation error:', error);
             setCalculating(false);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         try {
             await axios.post('http://localhost:8000/api/user/rentals', {
+                ...formData,
                 car_id: carId,
                 rental_point_start_id: car.rental_point_id,
-                rental_point_end_id: formData.rental_point_end_id,
-                start_date: formData.start_date,
-                planned_end_date: formData.planned_end_date,
-                notes: formData.notes
             }, config);
 
             alert('Rezerwacja utworzona pomyślnie!');
             navigate('/user/rentals');
         } catch (error) {
-            alert(error.response?.data?.message || 'Błąd tworzenia rezerwacji');
+            alert(error.response?.data?.message || 'Błąd rezerwacji');
         }
     };
 
@@ -110,10 +110,10 @@ const RentalBooking = () => {
         </div>
     );
 
-    if (!car) return <div className="text-center p-20">Nie znaleziono samochodu</div>;
+    if (!car) return <div className="text-center p-20 text-gray-500 italic">Nie znaleziono pojazdu.</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 font-sans">
             <nav className="bg-white shadow-sm p-4 sticky top-0 z-50">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
                     <h1 className="text-xl font-black text-indigo-600 flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
@@ -135,7 +135,7 @@ const RentalBooking = () => {
 
                 <div className="flex flex-col lg:flex-row gap-8">
                     <div className="lg:w-5/12">
-                        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden sticky top-24">
+                        <div className="bg-white rounded-[2.5rem] shadow-lg border border-gray-100 overflow-hidden sticky top-24">
                             <div className="h-64 bg-gray-100">
                                 {car.image_path ? (
                                     <img src={STORAGE_URL + car.image_path} alt={car.model} className="w-full h-full object-cover" />
@@ -145,51 +145,30 @@ const RentalBooking = () => {
                             </div>
 
                             <div className="p-6">
-                                <h2 className="text-2xl font-black text-gray-900 mb-2">{car.brand} {car.model}</h2>
-                                <p className="text-gray-500 text-sm mb-4">{car.year} • {car.type}</p>
+                                <h2 className="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tighter">{car.brand} {car.model}</h2>
+                                <p className="text-gray-400 font-bold text-xs uppercase mb-6 tracking-widest">{car.type} • {car.year}</p>
 
-                                <div className="flex gap-2 mb-4">
-                                    {car.has_gps && (
-                                        <span className="bg-emerald-50 text-emerald-600 text-xs font-bold px-3 py-1 rounded-full">GPS</span>
-                                    )}
-                                    {car.has_air_conditioning && (
-                                        <span className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full">Klimatyzacja</span>
-                                    )}
-                                </div>
-
-                                <div className="pt-4 border-t border-gray-100">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-xs font-bold text-gray-400 uppercase">Cena za dzień</span>
+                                <div className="space-y-4 pt-4 border-t border-gray-100">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Stawka dobowa</span>
                                         <span className="text-xl font-black text-gray-900">{car.price_per_day} PLN</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-xs font-bold text-gray-400 uppercase">Punkt odbioru</span>
-                                        <span className="text-sm font-bold text-indigo-600">{car.rental_point?.city}</span>
+                                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Punkt odbioru</span>
+                                        <span className="text-sm font-bold text-indigo-600 uppercase italic tracking-tighter">{car.rental_point?.city}</span>
                                     </div>
                                 </div>
-
-                                {rentalStats && (
-                                    <div className="mt-4 p-4 bg-indigo-50 rounded-2xl">
-                                        <p className="text-xs font-bold text-indigo-400 uppercase mb-1">Twoje wypożyczenia</p>
-                                        <p className="text-2xl font-black text-indigo-600">{rentalStats.completed_rentals}</p>
-                                        {rentalStats.rentals_until_discount > 0 && (
-                                            <p className="text-xs text-indigo-500 mt-2">
-                                                Za {rentalStats.rentals_until_discount + 1} wypożyczeń: {rentalStats.next_discount}% rabatu
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>
 
                     <div className="lg:w-7/12">
-                        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
-                            <h2 className="text-2xl font-black text-gray-900 mb-6">Formularz rezerwacji</h2>
+                        <div className="bg-white rounded-[2.5rem] shadow-lg border border-gray-100 p-10">
+                            <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tighter">Konfiguracja Rezerwacji</h2>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="relative">
-                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Punkt zwrotu</label>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-2">Punkt zwrotu pojazdu</label>
                                     <input
                                         type="text"
                                         value={endPointSearch}
@@ -199,20 +178,16 @@ const RentalBooking = () => {
                                             if (!e.target.value) setFormData({...formData, rental_point_end_id: ''});
                                         }}
                                         onFocus={() => setShowEndPointDropdown(true)}
-                                        placeholder="Wybierz punkt zwrotu..."
-                                        className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 focus:border-indigo-500 outline-none"
-                                        required={!formData.rental_point_end_id}
+                                        placeholder="Wpisz miasto lub nazwę punktu..."
+                                        className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 focus:border-indigo-500 outline-none transition"
+                                        required
                                     />
                                     {showEndPointDropdown && filteredEndPoints.length > 0 && (
-                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
+                                        <div className="absolute z-10 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl max-h-60 overflow-y-auto p-2">
                                             {filteredEndPoints.map(point => (
-                                                <div
-                                                    key={point.id}
-                                                    onClick={() => handleEndPointSelect(point)}
-                                                    className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                                >
-                                                    <p className="font-bold text-sm">{point.name}</p>
-                                                    <p className="text-xs text-gray-500">{point.city}</p>
+                                                <div key={point.id} onClick={() => handleEndPointSelect(point)} className="p-3 hover:bg-indigo-50 rounded-xl cursor-pointer transition">
+                                                    <p className="font-black text-gray-800 text-sm">{point.name}</p>
+                                                    <p className="text-[10px] text-gray-400 uppercase font-bold">{point.city}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -221,77 +196,111 @@ const RentalBooking = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Data odbioru</label>
-                                        <input
-                                            type="datetime-local"
-                                            value={formData.start_date}
-                                            onChange={e => setFormData({...formData, start_date: e.target.value})}
-                                            className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 focus:border-indigo-500 outline-none"
-                                            required
-                                        />
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-2">Data i godzina odbioru</label>
+                                        <input type="datetime-local" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none focus:border-indigo-500 transition" required />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Data zwrotu</label>
-                                        <input
-                                            type="datetime-local"
-                                            value={formData.planned_end_date}
-                                            onChange={e => setFormData({...formData, planned_end_date: e.target.value})}
-                                            className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 focus:border-indigo-500 outline-none"
-                                            required
-                                        />
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-2">Planowana data zwrotu</label>
+                                        <input type="datetime-local" value={formData.planned_end_date} onChange={e => setFormData({...formData, planned_end_date: e.target.value})} className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none focus:border-indigo-500 transition" required />
+                                    </div>
+                                </div>
+
+                                <div
+                                    onClick={() => setFormData({...formData, use_extra_insurance: !formData.use_extra_insurance})}
+                                    className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                                        formData.use_extra_insurance ? 'border-emerald-500 bg-emerald-50 shadow-inner' : 'border-gray-100 bg-gray-50 hover:border-indigo-100'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-2xl">{formData.use_extra_insurance ? '💎' : '🛡️'}</span>
+                                        <div>
+                                            <p className="font-black text-gray-800 uppercase text-xs tracking-widest">Ubezpieczenie AC Premium</p>
+                                            <p className="text-[10px] text-gray-500 italic">Ochrona przed kradzieżą i uszkodzeniami</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.use_extra_insurance ? 'bg-emerald-500 border-emerald-500 shadow-md' : 'border-gray-300'}`}>
+                                        {formData.use_extra_insurance && <span className="text-white text-[10px]">✓</span>}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Uwagi (opcjonalne)</label>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 ml-2">Uwagi do rezerwacji</label>
                                     <textarea
                                         value={formData.notes}
                                         onChange={e => setFormData({...formData, notes: e.target.value})}
-                                        className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 focus:border-indigo-500 outline-none"
+                                        className="w-full p-4 bg-gray-50 rounded-2xl border border-gray-100 focus:border-indigo-500 outline-none"
                                         rows="3"
                                         placeholder="Dodatkowe informacje..."
                                     />
                                 </div>
 
+                                {/* PODSUMOWANIE KOSZTÓW - DOPASOWANA KOLORYSTYKA */}
                                 {priceCalculation && (
-                                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-6 border border-gray-200">
-                                        <p className="text-xs font-bold text-gray-400 uppercase mb-4">Podsumowanie kosztów</p>
+                                    <div className="bg-white rounded-3xl p-8 shadow-sm border-2 border-gray-50 animate-in slide-in-from-top-4">
+                                        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-6">Podsumowanie kosztów</p>
 
-                                        <div className="space-y-3">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-gray-600">Czas najmu ({priceCalculation.days} dni)</span>
-                                                <span className="font-bold">{priceCalculation.base_price} PLN</span>
-                                            </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-gray-600">Ubezpieczenie</span>
-                                                <span className="font-bold">{priceCalculation.insurance_price} PLN</span>
-                                            </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-gray-600">Dystans ({priceCalculation.distance_km} km)</span>
-                                                <span className="font-bold">{priceCalculation.distance_fee} PLN</span>
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between text-xs font-bold text-gray-500">
+                                                <span>Najem pojazdu ({priceCalculation.days} dni)</span>
+                                                <span className="text-gray-900">{priceCalculation.base_price} PLN</span>
                                             </div>
 
-                                            {priceCalculation && parseFloat(priceCalculation.discount_amount) > 0 && (
-                                            <div className="flex justify-between text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg mb-2">
-                                                <span>Rabat lojalnościowy</span>
-                                                <span>-{priceCalculation.discount_amount} PLN</span>
-                                            </div>
-                                        )}
+                                            {!formData.use_extra_insurance ? (
+                                                <div className="flex justify-between text-xs font-bold text-emerald-600 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="text-xs">🛡️</span> Ochrona Standard (OC/NW)
+                                                    </span>
+                                                    <span>+{priceCalculation.insurance_price} PLN</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex justify-between text-xs font-bold text-indigo-600 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="text-xs">💎</span> Pełna ochrona AC (SCDW)
+                                                    </span>
+                                                    <span>+{priceCalculation.insurance_price} PLN</span>
+                                                </div>
+                                            )}
 
-                                            <div className="pt-3 border-t border-gray-300 flex justify-between items-center">
-                                                <span className="text-gray-900 font-black uppercase text-sm">Razem</span>
-                                                <span className="text-3xl font-black text-indigo-600">{priceCalculation.total_price} PLN</span>
+                                            {parseFloat(priceCalculation.distance_fee) > 0 && (
+                                                <div className="flex justify-between text-xs font-bold text-gray-500">
+                                                    <span>Opłata relokacyjna</span>
+                                                    <span className="text-gray-900">{priceCalculation.distance_fee} PLN</span>
+                                                </div>
+                                            )}
+
+                                            {parseFloat(priceCalculation.discount_amount) > 0 && (
+                                                <div className="flex justify-between text-xs font-bold text-emerald-600 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+                                                    <span className="flex items-center gap-1.5">🎁 Rabat lojalnościowy</span>
+                                                    <span>-{priceCalculation.discount_amount} PLN</span>
+                                                </div>
+                                            )}
+
+                                            <div className="pt-6 mt-2 border-t border-gray-100 flex justify-between items-end">
+                                                <div>
+                                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Razem do zapłaty</p>
+                                                    <span className="text-4xl font-black text-indigo-600 tracking-tighter">
+                                                        {priceCalculation.total_price}
+                                                    </span>
+                                                    <span className="text-xs ml-1 text-indigo-600 font-bold italic">PLN</span>
+                                                </div>
+                                                <div className="text-right pb-1">
+                                                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter italic">
+                                                        {priceCalculation.days} {priceCalculation.days === 1 ? 'doba' : 'dni'}
+                                                     </span>
+                                                </div>
                                             </div>
 
-                                            <div className="pt-3 border-t border-gray-200">
-                                                <div className="flex justify-between text-xs">
-                                                    <span className="text-gray-500">Twoje saldo</span>
-                                                    <span className={`font-bold ${priceCalculation.has_enough_balance ? 'text-emerald-600' : 'text-red-600'}`}>
+                                            <div className="pt-4 flex justify-between items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Twoje aktualne saldo</span>
+                                                    <span className={`text-sm font-black ${priceCalculation.has_enough_balance ? "text-emerald-500" : "text-rose-500"}`}>
                                                         {priceCalculation.user_balance} PLN
                                                     </span>
                                                 </div>
                                                 {!priceCalculation.has_enough_balance && (
-                                                    <p className="text-xs text-red-600 mt-2">Niewystarczające saldo. Doładuj konto.</p>
+                                                    <div className="px-3 py-1.5 bg-rose-50 rounded-lg border border-rose-100">
+                                                        <p className="text-[9px] text-rose-500 font-black uppercase tracking-tighter italic">Niewystarczające środki</p>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -301,9 +310,9 @@ const RentalBooking = () => {
                                 <button
                                     type="submit"
                                     disabled={!priceCalculation || !priceCalculation.has_enough_balance || calculating}
-                                    className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                    className="w-full py-6 rounded-3xl bg-indigo-600 text-white font-black uppercase text-xs tracking-[0.3em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-500/20 active:scale-95 disabled:opacity-30"
                                 >
-                                    {calculating ? 'Obliczam...' : 'Potwierdź rezerwację'}
+                                    {calculating ? 'Przeliczam dane...' : 'Potwierdź rezerwację'}
                                 </button>
                             </form>
                         </div>

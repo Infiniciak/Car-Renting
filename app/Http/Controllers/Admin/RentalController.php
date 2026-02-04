@@ -65,6 +65,7 @@ class RentalController extends Controller
             'rental_point_end_id' => 'required|exists:rental_points,id',
             'start_date' => 'required|date|after_or_equal:now',
             'planned_end_date' => 'required|date|after:start_date',
+            'use_extra_insurance' => 'boolean', // NOWE POLE
             'notes' => 'nullable|string',
         ]);
 
@@ -91,7 +92,13 @@ class RentalController extends Controller
 
         $basePrice = $car->getPriceWithDiscount() * $days;
         $distanceFee = $distance * 2;
-        $insurancePrice = $car->insurance_per_day * $days;
+
+        // --- ZMODYFIKOWANA LOGIKA UBEZPIECZENIA ---
+        $useExtra = $request->boolean('use_extra_insurance');
+        // Jeśli AC wybrane, bierzemy extra_insurance_per_day, w przeciwnym razie insurance_per_day
+        $insuranceRate = $useExtra ? $car->extra_insurance_per_day : $car->insurance_per_day;
+        $insurancePrice = $insuranceRate * $days;
+        // ------------------------------------------
 
         $userRentalCount = $user->rentals()
             ->whereIn('status', ['completed', 'active', 'early_return'])
@@ -106,7 +113,7 @@ class RentalController extends Controller
             ], 422);
         }
 
-        return \DB::transaction(function () use ($validated, $user, $car, $status, $distance, $basePrice, $insurancePrice, $distanceFee, $discountAmount, $totalPrice, $userRentalCount) {
+        return DB::transaction(function () use ($validated, $user, $car, $status, $distance, $basePrice, $insurancePrice, $distanceFee, $discountAmount, $totalPrice, $userRentalCount, $useExtra) {
 
             $rental = Rental::create([
                 'user_id' => $validated['user_id'],
@@ -118,6 +125,7 @@ class RentalController extends Controller
                 'distance_km' => $distance,
                 'base_price' => $basePrice,
                 'insurance_price' => $insurancePrice,
+                'use_extra_insurance' => $useExtra, // ZAPISUJEMY WYBÓR
                 'distance_fee' => $distanceFee,
                 'discount_amount' => $discountAmount,
                 'total_price' => $totalPrice,
