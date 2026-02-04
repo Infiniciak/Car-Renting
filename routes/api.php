@@ -84,5 +84,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
 
         Route::get('/stats', [AdminStatsController::class, 'index']);
+        Route::get('/revenue-stats', [AdminStatsController::class, 'getRevenueStats']);
+        Route::get('/revenue-by-month', [AdminStatsController::class, 'getRevenueByMonth']);
+        Route::get('/revenue-by-point', [AdminStatsController::class, 'getRevenueByPoint']);
+        Route::get('/top-users', [AdminStatsController::class, 'getTopUsers']);
+        Route::get('/discount-stats', [AdminStatsController::class, 'getDiscountStats']);
     });
 });
