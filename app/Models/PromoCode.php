@@ -34,17 +34,17 @@ class PromoCode extends Model
     protected $appends = ['status'];
 
     public function getStatusAttribute(): string
-{
-    if ($this->used) {
-        return 'used';
-    }
+    {
+        if ($this->used) {
+            return 'used';
+        }
 
-    if ($this->expires_at && now()->gt($this->expires_at)) {
-        return 'expired';
-    }
+        if ($this->expires_at && now()->gt($this->expires_at)) {
+            return 'expired';
+        }
 
-    return 'active';
-}
+        return 'active';
+    }
 
     public function createdByAdmin(): BelongsTo
     {

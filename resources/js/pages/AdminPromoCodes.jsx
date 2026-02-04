@@ -152,7 +152,16 @@ const AdminPromoCodes = () => {
                                             <div>
                                                 <p className="text-gray-400 text-xs uppercase font-bold mb-1">Wygasa</p>
                                                 <p className="text-gray-300">
-                                                    {code.expires_at ? new Date(code.expires_at).toLocaleDateString('pl-PL') : 'Nigdy'}
+                                                    {code.expires_at
+                                                        ? new Date(code.expires_at).toLocaleString('pl-PL', {
+                                                            year: 'numeric',
+                                                            month: '2-digit',
+                                                            day: '2-digit',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })
+                                                        : 'Nigdy'
+                                                    }
                                                 </p>
                                             </div>
                                         </div>
