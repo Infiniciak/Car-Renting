@@ -60,6 +60,10 @@ const UserPanel = ({ onLogout }) => {
                 <span className="text-xl font-black text-blue-600">CAR-RENT</span>
                 <div className="flex items-center gap-6">
                     <button
+                        onClick={() => navigate('/wizard')} className="bg-indigo-600 text-white px-6 py-2 rounded-full font-bold hover:bg-indigo-500 transition shadow-lg shadow-indigo-100 active:scale-95">
+                            Pomoc w wyborze
+                    </button>
+                    <button
                         onClick={() => navigate('/profile')}
                         className="text-gray-600 hover:text-blue-600 font-semibold transition"
                     >

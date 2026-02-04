@@ -10,53 +10,79 @@ class CarSeeder extends Seeder
 {
     public function run(): void
     {
-        // Pobieramy wszystkie dostępne ID punktów, aby przypisać auta
+
         $pointIds = RentalPoint::pluck('id')->toArray();
 
-        $cars = [
-            // ELEKTRYCZNE
-            ['brand' => 'Tesla', 'model' => 'Model 3', 'year' => 2024, 'reg' => 'EL-TS324', 'type' => 'electric', 'fuel' => 'electric', 'price' => 350],
-            ['brand' => 'Tesla', 'model' => 'Model Y', 'year' => 2023, 'reg' => 'WA-TY999', 'type' => 'SUV', 'fuel' => 'electric', 'price' => 420],
-            ['brand' => 'Kia', 'model' => 'EV6', 'year' => 2024, 'reg' => 'KR-EV600', 'type' => 'hatchback', 'fuel' => 'electric', 'price' => 320],
+        if (empty($pointIds)) {
+            $defaultPoint = RentalPoint::create([
+                'name' => 'Punkt Centralny',
+                'city' => 'Warszawa',
+                'address' => 'ul. Marszałkowska 100',
+                'postal_code' => '00-001',
+                'has_charging_station' => true
+            ]);
+            $pointIds = [$defaultPoint->id];
+        }
 
-            // PREMIUM / SEDAN
-            ['brand' => 'BMW', 'model' => 'M3', 'year' => 2023, 'reg' => 'W0-BMW01', 'type' => 'sedan', 'fuel' => 'petrol', 'price' => 550],
-            ['brand' => 'Mercedes', 'model' => 'C-Class', 'year' => 2022, 'reg' => 'DW-MC123', 'type' => 'sedan', 'fuel' => 'petrol', 'price' => 400],
-            ['brand' => 'Audi', 'model' => 'A6', 'year' => 2023, 'reg' => 'PO-A666A', 'type' => 'sedan', 'fuel' => 'diesel', 'price' => 450],
-
-            // SUV / CROSSOVER
-            ['brand' => 'Volvo', 'model' => 'XC60', 'year' => 2024, 'reg' => 'GD-V6000', 'type' => 'SUV', 'fuel' => 'hybrid', 'price' => 380],
-            ['brand' => 'Toyota', 'model' => 'RAV4', 'year' => 2023, 'reg' => 'BI-RAV44', 'type' => 'SUV', 'fuel' => 'hybrid', 'price' => 280],
-            ['brand' => 'Hyundai', 'model' => 'Tucson', 'year' => 2022, 'reg' => 'ZS-HYU11', 'type' => 'SUV', 'fuel' => 'petrol', 'price' => 250],
-
-            // EKONOMICZNE / MIEJSKIE
-            ['brand' => 'Volkswagen', 'model' => 'Golf 8', 'year' => 2023, 'reg' => 'LU-GOLF8', 'type' => 'hatchback', 'fuel' => 'petrol', 'price' => 180],
-            ['brand' => 'Toyota', 'model' => 'Yaris', 'year' => 2024, 'reg' => 'RZ-YAR24', 'type' => 'hatchback', 'fuel' => 'hybrid', 'price' => 150],
-            ['brand' => 'Skoda', 'model' => 'Octavia', 'year' => 2023, 'reg' => 'PZ-SKO01', 'type' => 'sedan', 'fuel' => 'diesel', 'price' => 220],
-            ['brand' => 'Dacia', 'model' => 'Sandero', 'year' => 2022, 'reg' => 'NO-DAC12', 'type' => 'hatchback', 'fuel' => 'petrol', 'price' => 120],
-
-            // INNE
-            ['brand' => 'Ford', 'model' => 'Mustang', 'year' => 2021, 'reg' => 'W1-FORD1', 'type' => 'coupe', 'fuel' => 'petrol', 'price' => 600],
-            ['brand' => 'Porsche', 'model' => 'Taycan', 'year' => 2024, 'reg' => 'WA-PORS1', 'type' => 'electric', 'fuel' => 'electric', 'price' => 950],
+        $brands = [
+            'Toyota' => ['Corolla', 'Yaris', 'RAV4', 'Camry', 'Proace'],
+            'BMW' => ['3 Series', '5 Series', 'X5', 'M4', 'X7'],
+            'Mercedes' => ['A-Class', 'E-Class', 'GLE', 'S-Class', 'V-Class'],
+            'Audi' => ['A3', 'A4', 'A6', 'Q5', 'Q7'],
+            'Tesla' => ['Model 3', 'Model Y', 'Model S', 'Model X'],
+            'Volkswagen' => ['Golf', 'Passat', 'Tiguan', 'ID.4', 'Transporter'],
+            'Ford' => ['Focus', 'Mustang', 'Explorer', 'Transit'],
+            'Hyundai' => ['i30', 'Tucson', 'Ioniq 5', 'Santa Fe'],
+            'Volvo' => ['XC40', 'XC60', 'XC90', 'S90'],
+            'Skoda' => ['Fabia', 'Octavia', 'Superb', 'Kodiaq']
         ];
 
-        foreach ($cars as $carData) {
+        $fuels = ['petrol', 'diesel', 'electric', 'hybrid'];
+
+        for ($i = 1; $i <= 50; $i++) {
+            $brand = array_rand($brands);
+            $model = $brands[$brand][array_rand($brands[$brand])];
+
+            // --- LOGIKA CECH POJAZDU ---
+            $isVan = (str_contains($model, 'V-Class') || str_contains($model, 'Proace') || str_contains($model, 'Transporter') || str_contains($model, 'Transit'));
+            $isLargeSUV = (str_contains($model, 'X7') || str_contains($model, 'Q7') || str_contains($model, 'XC90') || str_contains($model, 'Explorer'));
+            $isElectric = (str_contains($brand, 'Tesla') || str_contains($model, 'ID.4') || str_contains($model, 'Ioniq 5') || str_contains($model, 'EV6'));
+
+            // Liczba miejsc
+            $seats = 5;
+            if ($isVan) $seats = rand(7, 9);
+            elseif ($isLargeSUV) $seats = 7;
+            elseif (in_array($model, ['Yaris', 'Fabia', '500', 'A3'])) $seats = 4;
+
+            // Typ nadwozia
+            $type = 'sedan';
+            if ($isVan) $type = 'van';
+            elseif (str_contains($model, 'X') || str_contains($model, 'Q') || str_contains($model, 'Tucson') || str_contains($model, 'XC') || str_contains($model, 'RAV4')) $type = 'SUV';
+            elseif ($isElectric) $type = 'electric';
+            elseif (in_array($model, ['Golf', 'Yaris', 'Focus', 'i30', 'Fabia'])) $type = 'hatchback';
+            elseif (str_contains($model, 'Mustang') || str_contains($model, 'M4')) $type = 'coupe';
+
+            // Cena (bardziej realistyczna)
+            $price = rand(150, 450);
+            if ($isVan || $isLargeSUV) $price = rand(450, 800);
+            if (str_contains($model, 'S-Class') || str_contains($model, 'M4') || str_contains($model, 'S90')) $price = rand(800, 1500);
+
             Car::create([
-                'brand' => $carData['brand'],
-                'model' => $carData['model'],
-                'year' => $carData['year'],
-                'registration_number' => $carData['reg'],
-                'type' => $carData['type'],
-                'fuel_type' => $carData['fuel'],
-                'transmission' => (rand(0, 1) ? 'automatic' : 'manual'),
-                'seats' => ($carData['type'] === 'coupe' ? 4 : 5),
-                'price_per_day' => $carData['price'],
-                'insurance_per_day' => rand(30, 80),
+                'brand' => $brand,
+                'model' => $model,
+                'year' => rand(2021, 2024),
+                'registration_number' => strtoupper(substr($brand, 0, 2)) . rand(10000, 99999),
+                'type' => $type,
+                'fuel_type' => $isElectric ? 'electric' : $fuels[array_rand($fuels)],
+                'transmission' => (rand(0, 1) || $isElectric || $price > 400) ? 'automatic' : 'manual',
+                'seats' => $seats,
+                'price_per_day' => $price,
+                'insurance_per_day' => rand(30, 100),
                 'status' => 'available',
                 'has_gps' => (bool)rand(0, 1),
                 'has_air_conditioning' => true,
-                'rental_point_id' => !empty($pointIds) ? $pointIds[array_rand($pointIds)] : null,
-                'description' => 'Świetny samochód do wynajęcia. Polecamy!',
+                'rental_point_id' => $pointIds[array_rand($pointIds)],
+                'description' => "Wyjątkowy $brand $model ($type) z rocznika " . rand(2021, 2024) . ". Idealny stan techniczny, bogate wyposażenie. Zapraszamy do wynajmu!",
             ]);
         }
     }

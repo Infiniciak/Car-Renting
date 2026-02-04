@@ -33,6 +33,26 @@ class PublicCarController extends Controller
                 $query->where('rental_point_id', $request->rental_point_id);
             }
 
+            if ($request->filled('type')) { // Nadwozie
+                $query->where('type', $request->type);
+            }
+
+            if ($request->filled('transmission')) { // Skrzynia
+                $query->where('transmission', $request->transmission);
+            }
+
+            if ($request->filled('seats')) { // Miejsca
+                $query->where('seats', '>=', $request->seats);
+            }
+
+            if ($request->boolean('has_gps')) {
+                $query->where('has_gps', true);
+            }
+
+            if ($request->boolean('has_air_conditioning')) {
+                $query->where('has_air_conditioning', true);
+            }
+
             return response()->json($query->paginate(9));
 
         } catch (\Exception $e) {
