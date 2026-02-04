@@ -12,7 +12,7 @@ class PromoCodeController extends Controller
     {
         $codes = PromoCode::with(['createdByAdmin', 'usedByUser', 'sentToUser'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         return response()->json($codes);
     }
