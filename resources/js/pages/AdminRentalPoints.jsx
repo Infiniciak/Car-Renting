@@ -124,13 +124,15 @@ const AdminRentalPoints = () => {
     };
 
     const handleGeocode = async () => {
-        // Sprawdzamy, czy wpisano miasto
-        if (!formData.city) {
-            alert("Wpisz najpierw miasto!");
+        const city = formData.city?.trim();
+        const address = formData.address?.trim();
+
+        if (!city || !address) {
+            alert("Musisz wpisać zarówno miasto, jak i adres!");
             return;
         }
 
-        const query = `${formData.address}, ${formData.city}`;
+        const query = `${address}, ${city}, Polska`;
 
         try {
             const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
@@ -160,6 +162,7 @@ const AdminRentalPoints = () => {
             alert("Błąd połączenia z mapą.");
         }
     };
+    const isGeocodeDisabled = !formData.city?.trim() || !formData.address?.trim();
 
     return (
         <div className="min-h-screen bg-gray-50 p-8 font-sans">
@@ -185,7 +188,12 @@ const AdminRentalPoints = () => {
                                     <button
                                         type="button"
                                         onClick={handleGeocode}
-                                        className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition flex items-center gap-1"
+                                        disabled={isGeocodeDisabled}
+                                       className={`text-xs px-3 py-1 rounded transition flex items-center gap-1 ${
+                                         isGeocodeDisabled
+                                        ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                                       }`}
                                     >
                                         📍 Pobierz z adresu
                                     </button>
@@ -285,7 +293,7 @@ const AdminRentalPoints = () => {
                                                 {point.name}
                                                 {point.has_charging_station && <span className="text-yellow-500" title="Ma ładowarkę">⚡</span>}
                                             </h3>
-                                            <p className="text-gray-500">{point.address}, {point.city}</p>
+                                            <p className="text-gray-500">{point.address}, {point.city}, {point.postal_code}</p>
                                         </div>
                                         <div className="flex gap-2">
                                             <button onClick={() => startEdit(point)} className="text-indigo-600 font-bold px-3 py-1 bg-indigo-50 rounded text-sm">Edytuj</button>
