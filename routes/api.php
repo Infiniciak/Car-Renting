@@ -96,5 +96,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/rentals/{rental}/approve-return', [RentalController::class, 'approveReturn']);
         Route::post('/rentals/{rental}/reject-return', [RentalController::class, 'rejectReturn']);
+        Route::get('/revenue-stats', [AdminStatsController::class, 'getRevenueStats']);
+        Route::get('/revenue-by-month', [AdminStatsController::class, 'getRevenueByMonth']);
+        Route::get('/revenue-by-point', [AdminStatsController::class, 'getRevenueByPoint']);
+        Route::get('/top-users', [AdminStatsController::class, 'getTopUsers']);
+        Route::get('/discount-stats', [AdminStatsController::class, 'getDiscountStats']);
     });
 });
