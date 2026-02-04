@@ -17,13 +17,34 @@ const AdminCars = () => {
     const [formData, setFormData] = useState({
         brand: '', model: '', year: 2026, registration_number: '',
         type: 'sedan', fuel_type: 'petrol', transmission: 'manual',
-        seats: 5, price_per_day: '', insurance_per_day: '50',
+        seats: 5, price_per_day: '', insurance_per_day: '0',
         status: 'available', rental_point_id: '', has_gps: false,
         has_air_conditioning: true, description: ''
     });
 
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
+
+    // --- IDENTYCZNA LOGIKA AC JAK W MODELU I CAR DETAILS ---
+    const calculateLiveAC = () => {
+        const base = parseFloat(formData.price_per_day) || 0;
+        if (base <= 0) return "0.00";
+
+        let multiplier = 1.0;
+        const typeMultipliers = {
+            'SUV': 1.4, 'van': 1.3, 'sedan': 1.0,
+            'hatchback': 0.9, 'coupe': 1.8, 'electric': 1.5
+        };
+        multiplier *= (typeMultipliers[formData.type] || 1.0);
+
+        const premiumBrands = ['BMW', 'Mercedes', 'Audi', 'Tesla', 'Porsche'];
+        if (premiumBrands.includes(formData.brand)) multiplier *= 1.3;
+
+        const age = new Date().getFullYear() - (parseInt(formData.year) || 2024);
+        if (age <= 2) multiplier *= 1.25;
+
+        return (base * 0.12 * multiplier).toFixed(2);
+    };
 
     useEffect(() => { fetchData(); }, []);
 
@@ -65,9 +86,9 @@ const AdminCars = () => {
         setImagePreview(null);
         setRemoveImage(false);
         setFormData({
-            brand: '', model: '', year: 2024, registration_number: '',
+            brand: '', model: '', year: 2026, registration_number: '',
             type: 'sedan', fuel_type: 'petrol', transmission: 'manual',
-            seats: 5, price_per_day: '', insurance_per_day: '50',
+            seats: 5, price_per_day: '', insurance_per_day: '0',
             status: 'available', rental_point_id: '', has_gps: false,
             has_air_conditioning: true, description: ''
         });
@@ -146,10 +167,10 @@ const AdminCars = () => {
                     <div className="flex gap-4">
                         <input
                             type="text" placeholder="Szukaj (marka, rejestracja)..."
-                            className="bg-[#1e1e2d] border border-white/10 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500 transition-all"
+                            className="bg-[#1e1e2d] border border-white/10 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500 transition-all text-sm"
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <button onClick={handleOpenAddModal} className="bg-indigo-600 hover:bg-indigo-700 px-6 py-4 rounded-2xl font-black transition-all">
+                        <button onClick={handleOpenAddModal} className="bg-indigo-600 hover:bg-indigo-700 px-6 py-4 rounded-2xl font-black transition-all text-sm tracking-widest">
                             + DODAJ AUTO
                         </button>
                     </div>
@@ -163,7 +184,6 @@ const AdminCars = () => {
                     ).map(car => (
                         <div key={car.id} className="bg-[#1e1e2d] p-8 rounded-[2.5rem] border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center transition-all hover:border-indigo-500/50 shadow-xl">
                             <div className="flex flex-col md:flex-row gap-8 w-full">
-                                {/* ZDJĘCIE W KAFELKU */}
                                 <div className="h-24 w-36 bg-black/40 rounded-2xl overflow-hidden flex items-center justify-center border border-white/5 flex-shrink-0 shadow-inner">
                                     {car.image_path ? (
                                         <img src={STORAGE_URL + car.image_path} alt="car" className="w-full h-full object-cover" />
@@ -172,55 +192,57 @@ const AdminCars = () => {
                                     )}
                                 </div>
 
-                                {/* INFO W KAFELKU */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-4 flex-1">
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Marka i Model</p>
-                                        <h3 className="font-bold text-lg text-white">{car.brand} {car.model}</h3>
+                                        <h3 className="font-bold text-lg text-white leading-tight">{car.brand} {car.model}</h3>
+                                        <p className="text-[10px] text-indigo-400 font-bold uppercase">{car.type} • {car.fuel_type}</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Tablice</p>
                                         <p className="text-indigo-400 font-bold">{car.registration_number}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Miejsca</p>
-                                        <p className="font-bold text-gray-200">{car.seats} os.</p>
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Status / Miejsca</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${car.status === 'available' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                                {car.status === 'available' ? 'Dostępny' : car.status}
+                                            </span>
+                                            <span className="text-xs text-gray-400 font-bold">{car.seats} os.</span>
+                                        </div>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Status</p>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${car.status === 'available' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                            {car.status === 'available' ? 'Dostępny' : car.status}
-                                        </span>
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Ubezpieczenie (Doba)</p>
+                                        <p className="text-xs font-bold text-gray-300">Standard: {car.insurance_per_day} PLN</p>
+                                        <p className="text-xs font-bold text-indigo-400">Premium AC: {car.extra_insurance_per_day} PLN</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Lokalizacja</p>
                                         <p className="text-blue-400 font-bold text-sm leading-tight">
-                                            {car.rental_point
-                                                ? `${car.rental_point.name} (${car.rental_point.city})`
-                                                : '📦 Magazyn / Brak przypisania'}
+                                            {car.rental_point ? car.rental_point.city : '📦 Magazyn'}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Cena (doba)</p>
-                                        <p className="font-bold text-emerald-400">{car.price_per_day} PLN</p>
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Cena (Doba)</p>
+                                        <p className="font-black text-emerald-400 text-lg">{car.price_per_day} PLN</p>
                                     </div>
-                                                                        <div>
-                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Rok Produkcji</p>
-                                        <p className="font-bold text-gray-400">{car.year}</p>
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Skrzynia / Rok</p>
+                                        <p className="font-bold text-gray-400 text-xs uppercase">{car.transmission} • {car.year}</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Wyposażenie</p>
-                                        <p className="text-[10px] font-bold text-gray-500">
-                                            {car.has_air_conditioning ? 'KLIMATYZACJA' : ''} {car.has_gps ? 'GPS' : ''}
+                                        <p className="text-[9px] font-bold text-gray-500 flex gap-2">
+                                            {car.has_air_conditioning && <span className="bg-white/5 px-1 rounded italic">KLIMA</span>}
+                                            {car.has_gps && <span className="bg-white/5 px-1 rounded italic">GPS</span>}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* PRZYCISKI AKCJI */}
                             <div className="flex lg:flex-col gap-2 mt-6 lg:mt-0 w-full lg:w-auto">
-                                <button onClick={() => handleOpenEditModal(car)} className="flex-1 px-8 py-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors font-bold text-sm uppercase">Edytuj</button>
-                                <button onClick={() => handleDelete(car.id)} className="flex-1 px-8 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl transition-colors font-bold text-sm uppercase">Usuń</button>
+                                <button onClick={() => handleOpenEditModal(car)} className="flex-1 px-8 py-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors font-bold text-xs uppercase">Edytuj</button>
+                                <button onClick={() => handleDelete(car.id)} className="flex-1 px-8 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl transition-colors font-bold text-xs uppercase">Usuń</button>
                             </div>
                         </div>
                     ))}
@@ -229,10 +251,10 @@ const AdminCars = () => {
 
             {/* MODAL */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
-                    <div className="bg-[#1e1e2d] p-10 rounded-[3rem] border border-white/10 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+                    <div className="bg-[#1e1e2d] p-10 rounded-[3rem] border border-white/10 max-w-2xl w-full shadow-2xl my-auto">
                         <h2 className="text-3xl font-black mb-8 uppercase text-indigo-400 tracking-tighter">Specyfikacja Pojazdu</h2>
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-5 text-sm">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Marka</label>
@@ -246,71 +268,115 @@ const AdminCars = () => {
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
+                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Typ Nadwozia</label>
+                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                                        <option value="sedan">Sedan</option>
+                                        <option value="SUV">SUV</option>
+                                        <option value="hatchback">Hatchback</option>
+                                        <option value="van">Van</option>
+                                        <option value="coupe">Coupe</option>
+                                        <option value="electric">Electric</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Paliwo</label>
+                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.fuel_type} onChange={e => setFormData({...formData, fuel_type: e.target.value})}>
+                                        <option value="petrol">Benzyna</option>
+                                        <option value="diesel">Diesel</option>
+                                        <option value="electric">Prąd</option>
+                                        <option value="hybrid">Hybryda</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Skrzynia</label>
+                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.transmission} onChange={e => setFormData({...formData, transmission: e.target.value})}>
+                                        <option value="manual">Manualna</option>
+                                        <option value="automatic">Automat</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rejestracja</label>
                                     <input className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.registration_number} onChange={e => setFormData({...formData, registration_number: e.target.value})} required />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rok Produkcji</label>
-                                    <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
+                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rok / Miejsca</label>
+                                    <div className="flex gap-2">
+                                        <input type="number" className="w-1/2 bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
+                                        <input type="number" className="w-1/2 bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.seats} onChange={e => setFormData({...formData, seats: e.target.value})} />
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Miejsca</label>
-                                    <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.seats} onChange={e => setFormData({...formData, seats: e.target.value})} />
+                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2 text-emerald-400">Cena / Doba</label>
+                                    <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-emerald-400 font-black" value={formData.price_per_day} onChange={e => setFormData({...formData, price_per_day: e.target.value})} required />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
+                                    <label className="text-[10px] uppercase font-bold text-emerald-500 block mb-1">Ubezpieczenie Standard (OC)</label>
+                                    <p className="text-xl font-black text-emerald-500 tracking-tighter">
+                                        {formData.price_per_day ? (formData.price_per_day * 0.05).toFixed(2) : "0.00"} PLN
+                                        <span className="text-[9px] text-gray-500 font-normal ml-2 italic">(Autonabijanie 5%)</span>
+                                    </p>
+                                </div>
+                                <div className="bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
+                                    <label className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">Wyliczona stawka AC</label>
+                                    <p className="text-xl font-black text-indigo-400 tracking-tighter">
+                                        +{calculateLiveAC()} PLN
+                                        <span className="text-[9px] text-gray-500 font-normal ml-1">/ doba</span>
+                                    </p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Punkt Odbioru</label>
-                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-gray-400" value={formData.rental_point_id || ''} onChange={e => setFormData({...formData, rental_point_id: e.target.value})}>
+                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-blue-400 font-bold" value={formData.rental_point_id || ''} onChange={e => setFormData({...formData, rental_point_id: e.target.value})}>
                                         <option value="">Brak (Magazyn)</option>
                                         {points.map(p => <option key={p.id} value={p.id}>{p.city} - {p.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Cena za dobę</label>
-                                    <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-emerald-400 font-bold" value={formData.price_per_day} onChange={e => setFormData({...formData, price_per_day: e.target.value})} required />
+                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Status</label>
+                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                                        <option value="available">Dostępny</option>
+                                        <option value="rented">Wynajęty</option>
+                                        <option value="service">Serwis</option>
+                                    </select>
                                 </div>
                             </div>
 
-                            <div className="flex gap-8 p-6 bg-[#11111d] rounded-3xl justify-center">
+                            <div className="flex gap-8 p-5 bg-[#11111d] rounded-2xl justify-center">
                                 <label className="flex items-center gap-3 cursor-pointer group">
-                                    <input type="checkbox" className="w-6 h-6 accent-indigo-600 rounded" checked={formData.has_gps} onChange={e => setFormData({...formData, has_gps: e.target.checked})} />
-                                    <span className="text-sm font-black group-hover:text-indigo-400 transition">GPS</span>
+                                    <input type="checkbox" className="w-5 h-5 accent-indigo-600 rounded" checked={formData.has_gps} onChange={e => setFormData({...formData, has_gps: e.target.checked})} />
+                                    <span className="text-xs font-black uppercase tracking-widest group-hover:text-indigo-400 transition">GPS</span>
                                 </label>
                                 <label className="flex items-center gap-3 cursor-pointer group">
-                                    <input type="checkbox" className="w-6 h-6 accent-indigo-600 rounded" checked={formData.has_air_conditioning} onChange={e => setFormData({...formData, has_air_conditioning: e.target.checked})} />
-                                    <span className="text-sm font-black group-hover:text-indigo-400 transition uppercase text-xs">Klimatyzacja</span>
+                                    <input type="checkbox" className="w-5 h-5 accent-indigo-600 rounded" checked={formData.has_air_conditioning} onChange={e => setFormData({...formData, has_air_conditioning: e.target.checked})} />
+                                    <span className="text-xs font-black uppercase tracking-widest group-hover:text-indigo-400 transition">KLIMATYZACJA</span>
                                 </label>
                             </div>
 
                             <div className="space-y-4">
                                 <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Zdjęcie pojazdu</label>
-                                <div className="relative h-48 w-full bg-black/40 rounded-3xl overflow-hidden border border-white/5 flex items-center justify-center">
+                                <div className="relative h-40 w-full bg-black/40 rounded-3xl overflow-hidden border border-white/5 flex items-center justify-center">
                                     {imagePreview ? (
                                         <>
-                                            <img src={imagePreview} className="w-full h-full object-cover" alt="Podgląd" />
-                                            <button
-                                                type="button" onClick={handleRemoveImage}
-                                                className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl text-[10px] font-black transition-all shadow-xl"
-                                            >
-                                                USUŃ
-                                            </button>
+                                            <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                                            <button type="button" onClick={handleRemoveImage} className="absolute top-3 right-3 bg-red-600 px-3 py-1 rounded-lg text-[9px] font-black tracking-tighter">USUŃ</button>
                                         </>
-                                    ) : (
-                                        <span className="text-gray-600 italic text-sm">Brak wybranego zdjęcia</span>
-                                    )}
+                                    ) : <span className="text-gray-600 italic text-xs">Wybierz plik graficzny...</span>}
                                 </div>
-                                <input
-                                    type="file" accept="image/*"
-                                    className="w-full bg-[#11111d] p-4 rounded-2xl text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition-all cursor-pointer"
-                                    onChange={handleImageChange}
-                                />
+                                <input type="file" accept="image/*" className="hidden" id="car-img" onChange={handleImageChange} />
+                                <label htmlFor="car-img" className="block text-center p-3 bg-white/5 rounded-2xl border border-dashed border-white/10 cursor-pointer hover:bg-white/10 transition text-xs font-bold uppercase tracking-widest">Zmień plik</label>
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 py-4 rounded-[2rem] font-black uppercase shadow-lg shadow-indigo-500/20 transition-all">Zapisz</button>
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-[2rem] font-bold uppercase transition-all">Anuluj</button>
+                                <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 py-4 rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all">Zapisz Pojazd</button>
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-[2rem] font-bold uppercase text-xs tracking-widest">Anuluj</button>
                             </div>
                         </form>
                     </div>

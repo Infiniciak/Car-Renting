@@ -12,7 +12,8 @@ class CarController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Car::with('rentalPoint')->get());
+        // Zwracamy auta z relacją punktu i wirtualnymi polami
+        return response()->json(Car::with('rentalPoint')->orderBy('created_at', 'desc')->get());
     }
 
     public function store(Request $request): JsonResponse
@@ -20,30 +21,31 @@ class CarController extends Controller
         $data = $request->validate([
             'brand' => 'required|string|max:255',
             'model' => 'required|string|max:255',
-            'year' => 'required|integer|min:1900|max:'.date('Y'),
+            'year' => 'required|integer|min:1900|max:'.(date('Y') + 1),
             'registration_number' => 'required|string|unique:cars,registration_number',
             'type' => 'required|string',
             'fuel_type' => 'required|string',
             'transmission' => 'required|string',
             'seats' => 'required|integer|min:1|max:9',
-            'price_per_day' => 'required|numeric|min:50',
-            'insurance_per_day' => 'required|numeric|min:0',
+            'price_per_day' => 'required|numeric|min:1',
+            // insurance_per_day usuwamy z walidacji - model sam to wyliczy
             'status' => 'required|string',
             'rental_point_id' => 'nullable|exists:rental_points,id',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'has_gps' => 'boolean',
-            'has_air_conditioning' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'has_gps' => 'required|boolean',
+            'has_air_conditioning' => 'required|boolean',
         ]);
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('cars', 'public');
         }
 
+        // Model Car wywoła calculateInsurances() dzięki zdarzeniu saving w booted()
         $car = Car::create($data);
 
         return response()->json([
-            'message' => 'Samochód dodany!',
+            'message' => 'Samochód dodany i ubezpieczenie wyliczone!',
             'car' => $car->load('rentalPoint')
         ], 201);
     }
@@ -53,18 +55,17 @@ class CarController extends Controller
         $data = $request->validate([
             'brand' => 'required|string|max:255',
             'model' => 'required|string|max:255',
-            'year' => 'required|integer|min:1900|max:'.date('Y'),
+            'year' => 'required|integer|min:1900|max:'.(date('Y') + 1),
             'registration_number' => 'required|string|unique:cars,registration_number,' . $car->id,
             'type' => 'required|string',
             'fuel_type' => 'required|string',
             'transmission' => 'required|string',
             'seats' => 'required|integer|min:1|max:9',
-            'price_per_day' => 'required|numeric|min:50',
+            'price_per_day' => 'required|numeric|min:1',
             'status' => 'required|string',
             'rental_point_id' => 'nullable|exists:rental_points,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'has_gps' => 'boolean',
-            'has_air_conditioning' => 'boolean',
+            'has_gps' => 'required|boolean',
+            'has_air_conditioning' => 'required|boolean',
             'description' => 'nullable|string'
         ]);
 
@@ -82,10 +83,11 @@ class CarController extends Controller
             $car->image_path = $request->file('image')->store('cars', 'public');
         }
 
+        // Update również wyzwoli przeliczenie ubezpieczeń w modelu
         $car->update($data);
 
         return response()->json([
-            'message' => 'Zaktualizowano pomyślnie!',
+            'message' => 'Zaktualizowano dane i przeliczono stawki ubezpieczeń!',
             'car' => $car->load('rentalPoint')
         ]);
     }
