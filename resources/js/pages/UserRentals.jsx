@@ -71,14 +71,14 @@ const UserRentals = () => {
     };
 
     const handleCancel = async (rentalId) => {
-        if (!window.confirm("Czy na pewno chcesz anulować to wypożyczenie?")) return;
+        if (!window.confirm("Czy na pewno chcesz zwrócić auto wcześniej? Zostanie pobrana kara.")) return;
 
         try {
             const res = await axios.post(`http://localhost:8000/api/user/rentals/${rentalId}/cancel`, {}, config);
             alert(`${res.data.message}. Zwrócono: ${res.data.refund_amount} PLN`);
             fetchRentals(pagination.current_page);
         } catch (err) {
-            alert(err.response?.data?.message || "Błąd podczas anulowania");
+            alert(err.response?.data?.message || "Błąd podczas zwrotu");
         }
     };
 
@@ -203,23 +203,45 @@ const UserRentals = () => {
                                                     </button>
                                                 )}
 
-                                                {rental.status === 'active' && (
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => handleRequestReturn(rental.id)}
-                                                            className="bg-green-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-green-700 transition"
-                                                        >
-                                                            Zakończ wynajem
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleCancel(rental.id)}
-                                                            className="bg-yellow-500 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-yellow-600 transition"
-                                                            title="Wcześniejszy zwrot z 20% karą"
-                                                        >
-                                                            Zwróć wcześniej
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                {rental.status === 'active' && (() => {
+                                                    const today = new Date();
+                                                    const plannedEnd = new Date(rental.planned_end_date);
+
+                                                    today.setHours(0, 0, 0, 0);
+                                                    plannedEnd.setHours(0, 0, 0, 0);
+
+                                                    const daysDiff = Math.floor((plannedEnd - today) / (1000 * 60 * 60 * 24));
+
+                                                    if (daysDiff > 0) {
+                                                        return (
+                                                            <button
+                                                                onClick={() => handleCancel(rental.id)}
+                                                                className="bg-yellow-500 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-yellow-600 transition"
+                                                                title="Wcześniejszy zwrot z 20% karą"
+                                                            >
+                                                                Zwróć wcześniej
+                                                            </button>
+                                                        );
+                                                    } else if (daysDiff === 0) {
+                                                        return (
+                                                            <button
+                                                                onClick={() => handleRequestReturn(rental.id)}
+                                                                className="bg-green-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-green-700 transition"
+                                                            >
+                                                                Zakończ wynajem
+                                                            </button>
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <button
+                                                                onClick={() => handleRequestReturn(rental.id)}
+                                                                className="bg-orange-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:opacity-90 transition"
+                                                            >
+                                                                Zakończ wynajem po terminie
+                                                            </button>
+                                                        );
+                                                    }
+                                                })()}
 
                                                 {rental.status === 'pending_return' && (
                                                     <div className="text-orange-600 font-bold text-sm text-right">
