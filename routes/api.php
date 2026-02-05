@@ -4,62 +4,102 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ApiAuthController;
 use App\Http\Controllers\Api\PublicRentalPointController;
+use App\Http\Controllers\Api\PublicCarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\RentalPointController;
-use App\Http\Controllers\Api\EmployeeCarController;
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
+use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\Admin\CarController;
+use App\Http\Controllers\Admin\RentalController;
+use App\Http\Controllers\Admin\AdminStatsController;
+use App\Http\Controllers\Api\UserRentalController;
+use App\Http\Controllers\Admin\PromoCodeController;
 
 // --- TRASY PUBLICZNE ---
 Route::post('/login', [ApiAuthController::class, 'login']);
 Route::post('/register', [ApiAuthController::class, 'register']);
 Route::post('/forgot-password', [ApiAuthController::class, 'forgotPassword']);
+
+Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
+Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
+
+Route::get('/cars', [PublicCarController::class, 'index']);
+Route::get('/cars/{id}', [PublicCarController::class, 'show']);
+
 Route::post('/reset-password', [ApiAuthController::class, 'resetPassword']);
+
+// Weryfikacja kodu przy logowaniu (Użytkownik nie ma jeszcze tokena Bearer)
+Route::post('/2fa/verify-login', [TwoFactorController::class, 'verifyLogin']);
 
 Route::get('/rental-points', [PublicRentalPointController::class, 'index']);
 Route::get('/rental-points/{id}', [PublicRentalPointController::class, 'show']);
 
 // --- TRASY CHRONIONE (Wymagają zalogowania) ---
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/top-up', [ProfileController::class, 'topUp']);
+    Route::post('/redeem-code', [ProfileController::class, 'redeemCode']);
+    Route::get('/my-promo-codes', [ProfileController::class, 'getUserCodes']);
+    Route::post('/my-promo-codes/{codeId}/use', [ProfileController::class, 'usePromoCode']);
 
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
+    // Zarządzanie 2FA z poziomu Profilu
+    Route::get('/2fa/generate', [TwoFactorController::class, 'generate']); // Pobierz QR kod
+    Route::post('/2fa/enable', [TwoFactorController::class, 'enable']);    // Włącz 2FA (potwierdź kodem)
+    Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);  // Wyłącz 2FA
+
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/logout', [ApiAuthController::class, 'logout']);
 
+    Route::post('/user/rentals/{rental}/request-return', [UserRentalController::class, 'requestReturn']);
+
+   Route::prefix('user')->group(function () {
+        Route::get('/rental-stats', [UserRentalController::class, 'getUserRentalCount']);
+        Route::post('/calculate-price', [UserRentalController::class, 'calculatePrice']);
+        Route::post('/rentals', [UserRentalController::class, 'store']);
+        Route::get('/rentals', [UserRentalController::class, 'myRentals']);
+        Route::post('/rentals/{rental}/cancel', [UserRentalController::class, 'cancel']);
+    });
+
     // --- TYLKO DLA ADMINA ---
     Route::middleware('role:admin')->prefix('admin')->group(function () {
-
-        // ZARZĄDZANIE UŻYTKOWNIKAMI (CRUD)
         Route::get('/users', [UserManagementController::class, 'index']);
-        Route::post('/users', [UserManagementController::class, 'store']);     // DODANE: To naprawia błąd POST
+        Route::post('/users', [UserManagementController::class, 'store']);
         Route::put('/users/{user}', [UserManagementController::class, 'update']);
         Route::delete('/users/{user}', [UserManagementController::class, 'destroy']);
 
-        // PUNKTY WYPOŻYCZEŃ (CRUD)
         Route::get('/rental-points', [RentalPointController::class, 'index']);
         Route::post('/rental-points', [RentalPointController::class, 'store']);
         Route::put('/rental-points/{rentalPoint}', [RentalPointController::class, 'update']);
         Route::delete('/rental-points/{rentalPoint}', [RentalPointController::class, 'destroy']);
-    });
 
-    // --- TYLKO DLA PRACOWNIKA ---
-    Route::middleware('role:employee')->prefix('employee')->group(function () {
-        // ZARZĄDZANIE AUTAMI W PUNKCIE PRACOWNIKA
-    Route::get('/cars', [EmployeeCarController::class, 'index']);
-    Route::post('/cars', [EmployeeCarController::class, 'store']);
-    Route::delete('/cars/{id}', [EmployeeCarController::class, 'destroy']);
+        Route::get('/cars', [CarController::class, 'index']);
+        Route::post('/cars', [CarController::class, 'store']);
+        Route::put('/cars/{car}', [CarController::class, 'update']);
+        Route::delete('/cars/{car}', [CarController::class, 'destroy']);
 
-    Route::patch('/cars/{id}/status', [EmployeeCarController::class, 'changeStatus']);
-    Route::patch('/cars/{id}/promotion', [EmployeeCarController::class, 'setPromotion']);
+        Route::get('/rentals', [RentalController::class, 'index']);
+        Route::get('/rentals/{rental}', [RentalController::class, 'show']);
+        Route::post('/rentals', [RentalController::class, 'store']);
+        Route::put('/rentals/{rental}', [RentalController::class, 'update']);
+        Route::delete('/rentals/{rental}', [RentalController::class, 'destroy']);
+
+        Route::post('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
+
+        Route::get('/stats', [AdminStatsController::class, 'index']);
+
+        Route::get('/promo-codes', [PromoCodeController::class, 'index']);
+        Route::post('/promo-codes', [PromoCodeController::class, 'store']);
+        Route::delete('/promo-codes/{promoCode}', [PromoCodeController::class, 'destroy']);
+
+        Route::post('/rentals/{rental}/approve-return', [RentalController::class, 'approveReturn']);
+        Route::post('/rentals/{rental}/reject-return', [RentalController::class, 'rejectReturn']);
+        Route::get('/revenue-stats', [AdminStatsController::class, 'getRevenueStats']);
+        Route::get('/revenue-by-month', [AdminStatsController::class, 'getRevenueByMonth']);
+        Route::get('/revenue-by-point', [AdminStatsController::class, 'getRevenueByPoint']);
+        Route::get('/top-users', [AdminStatsController::class, 'getTopUsers']);
+        Route::get('/discount-stats', [AdminStatsController::class, 'getDiscountStats']);
     });
 });

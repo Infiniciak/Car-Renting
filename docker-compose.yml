@@ -6,11 +6,11 @@ services:
     restart: "no"
     tty: true
     stdin_open: true
-    
     volumes:
       - .:/var/www/html
     ports:
       - "8000:8001"
+      - "5173:5173" # Port dla Vite (Hot Module Replacement)
     environment:
       - DB_CONNECTION=pgsql
       - DB_HOST=db
@@ -20,8 +20,6 @@ services:
       - DB_PASSWORD=carpass
     depends_on:
       - db
-    # Ta linia uruchomi serwer i utrzyma kontener przy życiu
-    command: tail -f /dev/null
 
   db:
     image: postgres:15
@@ -37,6 +35,7 @@ services:
 
   adminer:
     image: adminer
+    container_name: car_rent_adminer
     ports:
       - "8080:8080"
     depends_on:
@@ -44,6 +43,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
+    container_name: car_rent_pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: user@example.com
       PGADMIN_DEFAULT_PASSWORD: admin

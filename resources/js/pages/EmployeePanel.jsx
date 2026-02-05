@@ -135,13 +135,26 @@ const EmployeePanel = () => {
     };
 
     return (
-        <div className="min-h-screen bg-blue-50 p-8">
-            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div className="bg-blue-600 px-8 py-4 flex justify-between items-center text-white">
-                    <h2 className="text-xl font-bold">Panel Pracownika</h2>
-                    <button onClick={handleLogout} className="bg-white text-blue-600 px-4 py-1 rounded-full text-sm font-bold hover:bg-blue-50">
-                        Wyloguj
-                    </button>
+        <div className="min-h-screen bg-gray-900 p-8 font-sans text-gray-100">
+            <div className="max-w-4xl mx-auto bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-700">
+
+                {/* NAGŁÓWEK */}
+                <div className="bg-blue-600 px-8 py-4 flex justify-between items-center text-white shadow-md">
+                    <h2 className="text-xl font-bold tracking-wide">Panel Pracownika</h2>
+
+                    <div className="flex items-center gap-4">
+                        {/* PRZYCISK PROFILU */}
+                        <Link
+                            to="/profile"
+                            className="flex items-center gap-2 bg-blue-700/50 hover:bg-blue-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition"
+                        >
+                            ⚙️ Mój Profil
+                        </Link>
+
+                        <button onClick={handleLogout} className="bg-gray-900 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-gray-700 transition shadow-lg">
+                            Wyloguj
+                        </button>
+                    </div>
                 </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

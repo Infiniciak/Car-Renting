@@ -20,9 +20,11 @@
         "@tailwindcss/postcss": "^4.1.18",
         "@vitejs/plugin-react": "^5.1.2",
         "leaflet": "^1.9.4",
+        "qrcode.react": "^4.2.0",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
         "react-leaflet": "^5.0.0",
-        "react-router-dom": "^7.11.0"
+        "react-router-dom": "^7.11.0",
+        "recharts": "^3.7.0"
     }
 }

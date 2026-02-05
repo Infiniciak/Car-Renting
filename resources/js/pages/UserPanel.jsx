@@ -5,15 +5,15 @@ import axios from 'axios';
 const UserPanel = ({ onLogout }) => {
     const navigate = useNavigate();
     const [balance, setBalance] = useState(0);
-    const [topUpAmount, setTopUpAmount] = useState(50);
+    const [promoCodes, setPromoCodes] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const token = localStorage.getItem('token');
+    const config = { headers: { Authorization: `Bearer ${token}` } };
 
     const fetchUserData = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:8000/api/user', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await axios.get('http://localhost:8000/api/user', config);
             setBalance(res.data.balance);
             setLoading(false);
         } catch (err) {
@@ -22,21 +22,28 @@ const UserPanel = ({ onLogout }) => {
         }
     };
 
+    const fetchPromoCodes = async () => {
+        try {
+            const res = await axios.get('http://localhost:8000/api/my-promo-codes', config);
+            setPromoCodes(res.data);
+        } catch (err) {
+            console.error("Błąd pobierania kodów", err);
+        }
+    };
+
     useEffect(() => {
         fetchUserData();
+        fetchPromoCodes();
     }, []);
 
-    const handleTopUp = async () => {
+    const handleUseCode = async (codeId) => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:8000/api/top-up', 
-                { amount: topUpAmount },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const res = await axios.post(`http://localhost:8000/api/my-promo-codes/${codeId}/use`, {}, config);
             setBalance(res.data.new_balance);
-            alert(`Pomyślnie doładowano konto o ${topUpAmount} PLN!`);
+            fetchPromoCodes();
+            alert(res.data.message);
         } catch (err) {
-            alert("Błąd podczas doładowania konta.");
+            alert(err.response?.data?.message || "Błąd podczas aktywacji kodu");
         }
     };
 
@@ -49,10 +56,13 @@ const UserPanel = ({ onLogout }) => {
 
     return (
         <div className="min-h-screen bg-gray-100">
-            {/* Nawigacja */}
             <nav className="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
                 <span className="text-xl font-black text-blue-600">CAR-RENT</span>
                 <div className="flex items-center gap-6">
+                    <button
+                        onClick={() => navigate('/wizard')} className="bg-indigo-600 text-white px-6 py-2 rounded-full font-bold hover:bg-indigo-500 transition shadow-lg shadow-indigo-100 active:scale-95">
+                            Pomoc w wyborze
+                    </button>
                     <button
                         onClick={() => navigate('/profile')}
                         className="text-gray-600 hover:text-blue-600 font-semibold transition"
@@ -69,18 +79,15 @@ const UserPanel = ({ onLogout }) => {
             </nav>
 
             <main className="p-8 max-w-6xl mx-auto">
-                {/* Hero Section */}
                 <div className="bg-blue-600 rounded-3xl p-10 text-white mb-8 shadow-lg shadow-blue-200">
                     <h1 className="text-4xl font-bold mb-2">Witaj w naszej wypożyczalni!</h1>
                     <p className="text-blue-100">Znajdź idealne auto na swoją kolejną podróż.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* SEKCJA PORTFELA */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
                         <div>
                             <h2 className="text-xl font-bold mb-1">Twój Portfel</h2>
-                            <p className="text-gray-400 text-xs uppercase font-bold tracking-wider mb-4">Środki pre-paid</p>
                             <div className="flex items-baseline gap-2 mb-6">
                                 <span className="text-4xl font-black text-gray-800">
                                     {loading ? "..." : parseFloat(balance).toFixed(2)}
@@ -88,60 +95,90 @@ const UserPanel = ({ onLogout }) => {
                                 <span className="text-blue-600 font-bold">PLN</span>
                             </div>
                         </div>
-                        
-                        <div className="space-y-3">
-                            <select 
-                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-semibold outline-none focus:border-blue-500 text-gray-700"
-                                value={topUpAmount}
-                                onChange={(e) => setTopUpAmount(e.target.value)}
-                            >
-                                <option value="20">20 PLN</option>
-                                <option value="50">50 PLN</option>
-                                <option value="100">100 PLN</option>
-                                <option value="200">200 PLN</option>
-                            </select>
-                            <button 
-                                onClick={handleTopUp}
-                                className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 transition shadow-md shadow-green-100"
-                            >
-                                Doładuj konto
-                            </button>
+
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-700 mb-3">Twoje Kody Doładowania</h3>
+                            {promoCodes.length === 0 ? (
+                                <p className="text-xs text-gray-400 text-center py-4">Brak dostępnych kodów</p>
+                            ) : (
+                                <div className="space-y-2 max-h-[90px] overflow-y-auto">
+                                    {promoCodes.map(code => (
+                                        <div key={code.id} className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="font-mono text-xs font-bold text-gray-700">{code.code}</span>
+                                                {code.status === 'used' && (
+                                                    <span className="text-xs px-2 py-1 bg-gray-300 text-gray-600 rounded-full font-bold">Użyty</span>
+                                                )}
+                                                {code.status === 'expired' && (
+                                                    <span className="text-xs px-2 py-1 bg-gray-300 text-red-600 rounded-full font-bold">Wygasły</span>
+                                                )}
+                                                {code.status === 'active' && (
+                                                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-bold">Dostępny</span>
+                                                )}
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xl font-black text-green-600">{code.amount} PLN</span>
+                                                {code.status === 'active' && (
+                                                    <button
+                                                        onClick={() => handleUseCode(code.id)}
+                                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition"
+                                                    >
+                                                        Użyj
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {code.description && (
+                                                <p className="text-xs text-gray-500 mt-2">{code.description}</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* TWOJE REZERWACJE */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h2 className="text-xl font-bold mb-4">Twoje rezerwacje</h2>
-                        <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 rounded-xl">
-                            <p className="text-gray-400 italic text-sm">Brak aktywnych rezerwacji.</p>
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">Twoje Rezerwacje</h2>
+                            <p className="text-gray-500 text-sm mb-6">
+                                Zarządzaj swoimi aktualnymi wynajmami, przeglądaj historię podróży oraz monitoruj statusy płatności w jednym miejscu.
+                            </p>
                         </div>
+                        <button
+                            onClick={() => navigate('/user/rentals')}
+                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition"
+                        >
+                            Zobacz rezerwacje &rarr;
+                        </button>
                     </div>
 
-                    {/* SZYBKI WYBÓR / MAPA */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
-                        <p className="text-gray-500 text-sm mb-6">
-                            Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
-                        </p>
-                        <button 
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">Znajdź nas</h2>
+                            <p className="text-gray-500 text-sm mb-6">
+                                Przeglądaj mapę punktów, sprawdź dostępność ładowarek i wybierz miejsce odbioru.
+                            </p>
+                        </div>
+                        <button
                             onClick={() => navigate('/offer')}
-                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 mb-4"
+                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition"
                         >
                             Zobacz Punkty &rarr;
                         </button>
-                        
-                        <div className="mt-auto border-t pt-4 text-center">
-                            <button 
-                                onClick={() => navigate('/cars')} 
-                                className="text-blue-600 font-bold hover:underline"
-                            >
-                                Przeglądaj samochody
-                            </button>
-                            <p className="text-xs text-gray-400 mt-1">
-                                Pamiętaj o doładowaniu konta!
-                            </p>
-                        </div>
                     </div>
+                </div>
+
+                <div className="mt-8 bg-white p-8 rounded-3xl shadow-sm border border-gray-200 text-center">
+                    <h2 className="text-2xl font-bold mb-4">Gotowy na drogę?</h2>
+                    <button
+                        onClick={() => navigate('/cars')}
+                        className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 mb-4"
+                    >
+                        Przeglądaj samochody
+                    </button>
+                    <p className="text-gray-400 text-sm">
+                        Pamiętaj o doładowaniu konta przed wynajmem!
+                    </p>
                 </div>
             </main>
         </div>

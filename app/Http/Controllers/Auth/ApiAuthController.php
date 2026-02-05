@@ -30,27 +30,36 @@ class ApiAuthController extends Controller
     }
 
     public function login(Request $request) {
-        // Musimy odkomentować walidację, żeby mieć dane w $fields!
         $fields = $request->validate([
             'email' => 'required|string',
             'password' => 'required|string'
         ]);
 
         // Szukamy usera
-        $user = User::where('email', $fields['email'])->first();
+        $user = User::where('email', $request->email)->first();
 
-        // Sprawdzamy hasło
-        if (!$user || !Hash::check($fields['password'], $user->password)) {
-            return response()->json(['message' => 'Błędne dane logowania'], 401);
+        if ($user && Hash::check($request->password, $user->password)) {
+            
+            // --- SPRAWDZANIE 2FA ---
+            if ($user->two_factor_enabled) {
+                return response()->json([
+                    'status' => '2fa_required',
+                    'user_id' => $user->id,
+                    'message' => 'Wymagany kod 2FA'
+                ]);
+            }
+            // -----------------------
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+            return response()->json([
+                'token' => $token,
+                // POPRAWKA: Pobieramy wartość tekstową z Enuma
+                'role' => $user->role->value ?? $user->role,
+                'user' => $user
+            ]);
         }
-
-        $token = $user->createToken('myapptoken')->plainTextToken;
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-            'role' => $user->role 
-        ], 200);
+        
+        return response()->json(['message' => 'Błędne dane logowania'], 401);
     }
 
     public function logout(Request $request) {
@@ -61,43 +70,43 @@ class ApiAuthController extends Controller
     
     // Symulacja "zapomnienia" hasła
     public function forgotPassword(Request $request) {
-    $request->validate([
-        'email' => 'required|email|exists:users,email' // Walidacja: email musi istnieć w bazie
-    ]);
+        $request->validate([
+            'email' => 'required|email|exists:users,email' // Walidacja: email musi istnieć w bazie
+        ]);
 
-    $user = User::where('email', $request->email)->first();
-    
-    // Generujemy losowy kod i zapisujemy go w bazie dla tego usera
-    $code = (string)rand(100000, 999999);
-    $user->reset_code = $code;
-    $user->save();
+        $user = User::where('email', $request->email)->first();
+        
+        // Generujemy losowy kod i zapisujemy go w bazie dla tego usera
+        $code = (string)rand(100000, 999999);
+        $user->reset_code = $code;
+        $user->save();
 
-    return response()->json([
-        'message' => 'Kod wygenerowany.',
-        'code' => $code // Tylko do Twoich testów, normalnie byłoby w mailu
-    ]);
+        return response()->json([
+            'message' => 'Kod wygenerowany.',
+            'code' => $code 
+        ]);
     }
 
-// 2. Reset hasła
-public function resetPassword(Request $request) {
-    $request->validate([
-        'email' => 'required|email|exists:users,email',
-        'code' => 'required|string|min:6|max:6', // Kod musi mieć 6 znaków
-        'password' => 'required|string|min:8|confirmed', // Hasło min 8 znaków i musi być powtórzone
-    ]);
+    // 2. Reset hasła
+    public function resetPassword(Request $request) {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'code' => 'required|string|min:6|max:6', // Kod musi mieć 6 znaków
+            'password' => 'required|string|min:8|confirmed', // Hasło min 8 znaków i musi być powtórzone
+        ]);
 
-    $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
-    // WALIDACJA KODU: Sprawdzamy, czy kod z bazy zgadza się z tym od użytkownika
-    if (!$user->reset_code || $user->reset_code !== $request->code) {
-        return response()->json(['message' => 'Błędny kod weryfikacyjny.'], 422);
-    }
+        // WALIDACJA KODU: Sprawdzamy, czy kod z bazy zgadza się z tym od użytkownika
+        if (!$user->reset_code || $user->reset_code !== $request->code) {
+            return response()->json(['message' => 'Błędny kod weryfikacyjny.'], 422);
+        }
 
-    // Zmiana hasła i CZYSZCZENIE kodu, żeby nie można go było użyć drugi raz!
-    $user->password = Hash::make($request->password);
-    $user->reset_code = null; 
-    $user->save();
+        // Zmiana hasła i CZYSZCZENIE kodu, żeby nie można go było użyć drugi raz!
+        $user->password = Hash::make($request->password);
+        $user->reset_code = null; 
+        $user->save();
 
-    return response()->json(['message' => 'Hasło zmienione pomyślnie.']);
+        return response()->json(['message' => 'Hasło zmienione pomyślnie.']);
     }
 }
