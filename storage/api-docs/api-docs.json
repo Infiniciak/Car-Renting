@@ -1,0 +1,662 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Car Rental API",
+        "description": "Dokumentacja systemu wypożyczalni",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/admin/stats": {
+            "get": {
+                "tags": [
+                    "Admin Stats"
+                ],
+                "summary": "Pobierz ogólne statystyki floty",
+                "operationId": "getAdminStatsIndex",
+                "responses": {
+                    "200": {
+                        "description": "Zwraca statystyki paliwa, miast, typów aut i dane ogólne",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "by_type": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "avg_prices": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "fuel_stats": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "city_stats": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "general": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/stats/revenue": {
+            "get": {
+                "tags": [
+                    "Admin Stats"
+                ],
+                "summary": "Pobierz statystyki przychodów",
+                "operationId": "getAdminRevenueStats",
+                "responses": {
+                    "200": {
+                        "description": "Dane o przychodach netto, brutto i zwrotach",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/stats/revenue-monthly": {
+            "get": {
+                "tags": [
+                    "Admin Stats"
+                ],
+                "summary": "Przychody w rozbiciu na miesiące",
+                "operationId": "getAdminRevenueMonthly",
+                "responses": {
+                    "200": {
+                        "description": "Wykres miesięczny"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/stats/revenue-by-point": {
+            "get": {
+                "tags": [
+                    "Admin Stats"
+                ],
+                "summary": "Ranking punktów pod kątem przychodów",
+                "operationId": "getAdminRevenueByPoint",
+                "responses": {
+                    "200": {
+                        "description": "Lista punktów"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/stats/top-users": {
+            "get": {
+                "tags": [
+                    "Admin Stats"
+                ],
+                "summary": "Najlepsi klienci",
+                "operationId": "getAdminTopUsers",
+                "responses": {
+                    "200": {
+                        "description": "Lista użytkowników"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/stats/discounts": {
+            "get": {
+                "tags": [
+                    "Admin Stats"
+                ],
+                "summary": "Statystyki udzielonych rabatów",
+                "operationId": "getAdminDiscountStats",
+                "responses": {
+                    "200": {
+                        "description": "Dane o zniżkach"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/cars": {
+            "get": {
+                "tags": [
+                    "Admin Cars"
+                ],
+                "summary": "Pobierz pełną listę aut",
+                "operationId": "getAdminCarsList",
+                "responses": {
+                    "200": {
+                        "description": "Lista wszystkich samochodów",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Car"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin Cars"
+                ],
+                "summary": "Dodaj nowy pojazd",
+                "operationId": "storeCar",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "brand",
+                                    "model",
+                                    "year",
+                                    "registration_number",
+                                    "price_per_day",
+                                    "type",
+                                    "fuel_type",
+                                    "transmission"
+                                ],
+                                "properties": {
+                                    "brand": {
+                                        "type": "string",
+                                        "example": "Audi"
+                                    },
+                                    "model": {
+                                        "type": "string",
+                                        "example": "A6"
+                                    },
+                                    "year": {
+                                        "type": "integer",
+                                        "example": 2024
+                                    },
+                                    "registration_number": {
+                                        "type": "string",
+                                        "example": "KR12345"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "sedan"
+                                    },
+                                    "fuel_type": {
+                                        "type": "string",
+                                        "example": "petrol"
+                                    },
+                                    "transmission": {
+                                        "type": "string",
+                                        "example": "automatic"
+                                    },
+                                    "seats": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "price_per_day": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 299.99
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "available"
+                                    },
+                                    "rental_point_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "has_gps": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "has_air_conditioning": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "image": {
+                                        "description": "Plik obrazu",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Auto dodane"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/cars/{id}": {
+            "post": {
+                "tags": [
+                    "Admin Cars"
+                ],
+                "summary": "Aktualizuj pojazd (Multipart)",
+                "description": "Używamy POST z _method=PUT dla obsługi plików",
+                "operationId": "updateCar",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
+                                    "brand": {
+                                        "type": "string"
+                                    },
+                                    "model": {
+                                        "type": "string"
+                                    },
+                                    "remove_image": {
+                                        "type": "string",
+                                        "example": "1"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Zaktualizowano"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin Cars"
+                ],
+                "summary": "Usuń pojazd",
+                "operationId": "deleteCar",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usunięto"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/cars": {
+            "get": {
+                "tags": [
+                    "Public Cars"
+                ],
+                "summary": "Pobierz listę dostępnych samochodów",
+                "description": "Zwraca listę samochodów o statusie 'available' z paginacją oraz wyliczonymi stawkami ubezpieczeń.",
+                "operationId": "getPublicCarsList",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Wyszukiwanie po marce lub modelu",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "description": "Maksymalna cena za dobę",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        }
+                    },
+                    {
+                        "name": "fuel_type",
+                        "in": "query",
+                        "description": "Typ paliwa",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "rental_point_id",
+                        "in": "query",
+                        "description": "ID punktu odbioru",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Typ nadwozia",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transmission",
+                        "in": "query",
+                        "description": "Rodzaj skrzyni biegów",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "seats",
+                        "in": "query",
+                        "description": "Minimalna liczba miejsc",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "has_gps",
+                        "in": "query",
+                        "description": "Czy posiada GPS (true/false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "has_air_conditioning",
+                        "in": "query",
+                        "description": "Czy posiada klimatyzację (true/false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pomyślnie pobrano listę",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Car"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 45
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Błąd serwera"
+                    }
+                }
+            }
+        },
+        "/cars/{id}": {
+            "get": {
+                "tags": [
+                    "Public Cars"
+                ],
+                "summary": "Pobierz szczegóły konkretnego samochodu",
+                "operationId": "getPublicCarById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID samochodu",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Szczegóły samochodu",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Car"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nie znaleziono pojazdu"
+                    }
+                }
+            }
+        },
+        "/test-swagger": {
+            "get": {
+                "summary": "Test endpoint",
+                "operationId": "ac4edae10eb98e6c12a74d8fd48698d0",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "servers": [
+                    {
+                        "url": "http://localhost:8000/api",
+                        "description": "Local Server"
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Car": {
+                "title": "Car",
+                "description": "Model reprezentujący pojazd w systemie",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "brand": {
+                        "type": "string",
+                        "example": "Audi"
+                    },
+                    "model": {
+                        "type": "string",
+                        "example": "A6"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "example": 2026
+                    },
+                    "registration_number": {
+                        "type": "string",
+                        "example": "RZ12345"
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "SUV"
+                    },
+                    "fuel_type": {
+                        "type": "string",
+                        "example": "petrol"
+                    },
+                    "transmission": {
+                        "type": "string",
+                        "example": "automatic"
+                    },
+                    "seats": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "price_per_day": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 299.99
+                    },
+                    "insurance_per_day": {
+                        "description": "Podstawowe ubezpieczenie (5% ceny)",
+                        "type": "number",
+                        "format": "float",
+                        "example": 15
+                    },
+                    "extra_insurance_per_day": {
+                        "description": "Wyliczona stawka AC Premium",
+                        "type": "number",
+                        "format": "float",
+                        "example": 45.5
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "available"
+                    },
+                    "image_path": {
+                        "type": "string",
+                        "example": "cars/audi_a6.jpg",
+                        "nullable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "has_gps": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "has_air_conditioning": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "rental_point_id": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Admin Stats",
+            "description": "Statystyki i raporty dla panelu administratora"
+        },
+        {
+            "name": "Admin Cars",
+            "description": "Zarządzanie flotą pojazdów (Admin)"
+        },
+        {
+            "name": "Public Cars",
+            "description": "Operacje na samochodach dostępne dla każdego użytkownika"
+        }
+    ]
+}

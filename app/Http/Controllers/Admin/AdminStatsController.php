@@ -6,9 +6,33 @@ use App\Http\Controllers\Controller;
 use App\Models\Car;
 use App\Models\Rental;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: "Admin Stats", description: "Statystyki i raporty dla panelu administratora")]
 class AdminStatsController extends Controller
 {
+    #[OA\Get(
+        path: "/admin/stats",
+        operationId: "getAdminStatsIndex",
+        summary: "Pobierz ogólne statystyki floty",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Stats"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Zwraca statystyki paliwa, miast, typów aut i dane ogólne",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "by_type", type: "array", items: new OA\Items(type: "object")),
+                        new OA\Property(property: "avg_prices", type: "array", items: new OA\Items(type: "object")),
+                        new OA\Property(property: "fuel_stats", type: "array", items: new OA\Items(type: "object")),
+                        new OA\Property(property: "city_stats", type: "array", items: new OA\Items(type: "object")),
+                        new OA\Property(property: "general", type: "object")
+                    ]
+                )
+            )
+        ]
+    )]
     public function index()
     {
         $fuelStats = Car::select('fuel_type', DB::raw('count(*) as total'))
@@ -37,6 +61,20 @@ class AdminStatsController extends Controller
         ]);
     }
 
+    #[OA\Get(
+        path: "/admin/stats/revenue",
+        operationId: "getAdminRevenueStats",
+        summary: "Pobierz statystyki przychodów",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Stats"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Dane o przychodach netto, brutto i zwrotach",
+                content: new OA\JsonContent(type: "object")
+            )
+        ]
+    )]
     public function getRevenueStats()
     {
         $totalRevenue = Rental::whereIn('status', ['completed', 'active', 'early_return'])
@@ -75,6 +113,16 @@ class AdminStatsController extends Controller
         ]);
     }
 
+    #[OA\Get(
+        path: "/admin/stats/revenue-monthly",
+        operationId: "getAdminRevenueMonthly",
+        summary: "Przychody w rozbiciu na miesiące",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Stats"],
+        responses: [
+            new OA\Response(response: 200, description: "Wykres miesięczny")
+        ]
+    )]
     public function getRevenueByMonth()
     {
         $rentals = Rental::whereIn('status', ['completed', 'active', 'early_return'])
@@ -104,6 +152,16 @@ class AdminStatsController extends Controller
         return response()->json($rentals);
     }
 
+    #[OA\Get(
+        path: "/admin/stats/revenue-by-point",
+        operationId: "getAdminRevenueByPoint",
+        summary: "Ranking punktów pod kątem przychodów",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Stats"],
+        responses: [
+            new OA\Response(response: 200, description: "Lista punktów")
+        ]
+    )]
     public function getRevenueByPoint()
     {
         $revenue = Rental::join('rental_points', 'rentals.rental_point_start_id', '=', 'rental_points.id')
@@ -122,6 +180,16 @@ class AdminStatsController extends Controller
         return response()->json($revenue);
     }
 
+    #[OA\Get(
+        path: "/admin/stats/top-users",
+        operationId: "getAdminTopUsers",
+        summary: "Najlepsi klienci",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Stats"],
+        responses: [
+            new OA\Response(response: 200, description: "Lista użytkowników")
+        ]
+    )]
     public function getTopUsers()
     {
         $users = Rental::join('users', 'rentals.user_id', '=', 'users.id')
@@ -141,6 +209,16 @@ class AdminStatsController extends Controller
         return response()->json($users);
     }
 
+    #[OA\Get(
+        path: "/admin/stats/discounts",
+        operationId: "getAdminDiscountStats",
+        summary: "Statystyki udzielonych rabatów",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Stats"],
+        responses: [
+            new OA\Response(response: 200, description: "Dane o zniżkach")
+        ]
+    )]
     public function getDiscountStats()
     {
         $totalDiscounts = Rental::whereIn('status', ['completed', 'active', 'early_return'])

@@ -9,9 +9,15 @@ if not exist .env (
     copy .env.example .env
 )
 
-:: 2. USTAWIENIA BAZY DANYCH W .env
+:: 2. USTAWIENIA BAZY DANYCH I SWAGGERA W .env
 echo [*] Konfiguracja srodowiska...
 powershell -Command "(Get-Content .env) -replace 'DB_HOST=.*', 'DB_HOST=db' -replace 'DB_DATABASE=.*', 'DB_DATABASE=car_rent' -replace 'DB_USERNAME=.*', 'DB_USERNAME=caruser' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=carpass' | Set-Content .env"
+
+:: Dodajemy ustawienie autogenerowania Swaggera do .env, jeśli go nie ma
+findstr /C:"L5_SWAGGER_GENERATE_ALWAYS" .env >nul
+if %errorlevel% neq 0 (
+    echo L5_SWAGGER_GENERATE_ALWAYS=true >> .env
+)
 
 :: 3. URUCHOMIENIE DOCKERA
 echo [*] Buduje obraz (to moze potrwac przy pierwszym raz)...
@@ -42,7 +48,8 @@ docker compose exec app php artisan migrate:fresh --seed
 echo [*] Buduje manifest Vite...
 docker compose exec app npm run build
 
-docker-compose exec app npm install recharts
+:: Instalacja recharts jeśli brakuje
+docker compose exec app npm install recharts
 
 :: 8. START SERWEROW
 echo [*] Startuje serwery w nowych oknach...
@@ -53,8 +60,13 @@ start "VITE - Frontend" cmd /k "docker compose exec app npm run dev -- --host 0.
 :: Laravel (Backend)
 start "LARAVEL - Backend" cmd /k "docker compose exec app php artisan serve --host=0.0.0.0 --port=8001"
 
+:: 9. GENEROWANIE DOKUMENTACJI SWAGGER
+echo [*] Generuje dokumentacje API (Swagger)...
+docker compose exec -T app php artisan l5-swagger:generate
+
 echo ===========================================
 echo      APLIKACJA GOTOWA!
-echo      Link: http://localhost:8000
+echo      Frontend: http://localhost:8000
+echo      Swagger UI: http://localhost:8000/api/documentation
 echo ===========================================
 pause

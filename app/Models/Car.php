@@ -6,10 +6,35 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    title: "Car",
+    description: "Model reprezentujący pojazd w systemie",
+    type: "object"
+)]
 class Car extends Model
 {
     use HasFactory;
+
+    #[OA\Property(property: "id", type: "integer", example: 1)]
+    #[OA\Property(property: "brand", type: "string", example: "Audi")]
+    #[OA\Property(property: "model", type: "string", example: "A6")]
+    #[OA\Property(property: "year", type: "integer", example: 2026)]
+    #[OA\Property(property: "registration_number", type: "string", example: "RZ12345")]
+    #[OA\Property(property: "type", type: "string", example: "SUV")]
+    #[OA\Property(property: "fuel_type", type: "string", example: "petrol")]
+    #[OA\Property(property: "transmission", type: "string", example: "automatic")]
+    #[OA\Property(property: "seats", type: "integer", example: 5)]
+    #[OA\Property(property: "price_per_day", type: "number", format: "float", example: 299.99)]
+    #[OA\Property(property: "insurance_per_day", type: "number", format: "float", description: "Podstawowe ubezpieczenie (5% ceny)", example: 15.00)]
+    #[OA\Property(property: "extra_insurance_per_day", type: "number", format: "float", description: "Wyliczona stawka AC Premium", example: 45.50)]
+    #[OA\Property(property: "status", type: "string", example: "available")]
+    #[OA\Property(property: "image_path", type: "string", nullable: true, example: "cars/audi_a6.jpg")]
+    #[OA\Property(property: "description", type: "string", nullable: true)]
+    #[OA\Property(property: "has_gps", type: "boolean", example: true)]
+    #[OA\Property(property: "has_air_conditioning", type: "boolean", example: true)]
+    #[OA\Property(property: "rental_point_id", type: "integer", example: 1)]
 
     protected $fillable = [
         'brand', 'model', 'year', 'registration_number', 'type',
@@ -72,7 +97,6 @@ class Car extends Model
 
         return round(($basePrice * 0.12) * $multiplier, 2);
     }
-
 
     public function getPriceWithDiscount(): float
     {
