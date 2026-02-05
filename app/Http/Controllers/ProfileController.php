@@ -8,14 +8,47 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: "User Profile", description: "Zarządzanie profilem użytkownika i portfelem")]
 class ProfileController extends Controller
 {
+    #[OA\Get(
+        path: "/profile",
+        operationId: "getUserProfile",
+        summary: "Pobierz dane profilu",
+        security: [["bearerAuth" => []]],
+        tags: ["User Profile"],
+        responses: [
+            new OA\Response(response: 200, description: "Zwraca dane zalogowanego użytkownika")
+        ]
+    )]
     public function show(Request $request)
     {
         return response()->json($request->user());
     }
 
+    #[OA\Patch(
+        path: "/profile",
+        operationId: "updateUserProfile",
+        summary: "Zaktualizuj dane profilu",
+        security: [["bearerAuth" => []]],
+        tags: ["User Profile"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "name", type: "string", example: "Jan Kowalski"),
+                    new OA\Property(property: "email", type: "string", format: "email", example: "jan@example.com"),
+                    new OA\Property(property: "password", type: "string", format: "password", minLength: 8, nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Dane zaktualizowane"),
+            new OA\Response(response: 422, description: "Błąd walidacji")
+        ]
+    )]
     public function update(Request $request)
     {
         $user = $request->user();
@@ -45,6 +78,27 @@ class ProfileController extends Controller
         ]);
     }
 
+    #[OA\Post(
+        path: "/profile/redeem-code",
+        operationId: "redeemPromoCode",
+        summary: "Zrealizuj kod promocyjny (wpisywany ręcznie)",
+        security: [["bearerAuth" => []]],
+        tags: ["User Profile"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["code"],
+                properties: [
+                    new OA\Property(property: "code", type: "string", example: "BONUS2024")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Konto doładowane"),
+            new OA\Response(response: 404, description: "Nieprawidłowy kod"),
+            new OA\Response(response: 422, description: "Kod wygasł lub użyty")
+        ]
+    )]
     public function redeemCode(Request $request)
     {
         $validated = $request->validate([
@@ -94,6 +148,16 @@ class ProfileController extends Controller
         });
     }
 
+    #[OA\Get(
+        path: "/profile/codes",
+        operationId: "getUserPromoCodes",
+        summary: "Lista kodów przypisanych do użytkownika",
+        security: [["bearerAuth" => []]],
+        tags: ["User Profile"],
+        responses: [
+            new OA\Response(response: 200, description: "Lista kodów")
+        ]
+    )]
     public function getUserCodes(Request $request)
     {
         $user = $request->user();
@@ -105,6 +169,20 @@ class ProfileController extends Controller
         return response()->json($codes);
     }
 
+    #[OA\Post(
+        path: "/profile/codes/{id}/use",
+        operationId: "useAssignedPromoCode",
+        summary: "Zrealizuj kod przypisany do konta (przez ID)",
+        security: [["bearerAuth" => []]],
+        tags: ["User Profile"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Konto doładowane"),
+            new OA\Response(response: 403, description: "Kod nie należy do użytkownika")
+        ]
+    )]
     public function usePromoCode(Request $request, $codeId)
     {
         $user = $request->user();

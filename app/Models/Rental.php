@@ -7,10 +7,36 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    title: "Rental",
+    description: "Model reprezentujący wypożyczenie pojazdu",
+    type: "object"
+)]
 class Rental extends Model
 {
     use HasFactory;
+
+    #[OA\Property(property: "id", type: "integer", example: 1)]
+    #[OA\Property(property: "user_id", type: "integer", example: 1)]
+    #[OA\Property(property: "car_id", type: "integer", example: 5)]
+    #[OA\Property(property: "rental_point_start_id", type: "integer", example: 1)]
+    #[OA\Property(property: "rental_point_end_id", type: "integer", example: 2)]
+    #[OA\Property(property: "start_date", type: "string", format: "date-time")]
+    #[OA\Property(property: "planned_end_date", type: "string", format: "date-time")]
+    #[OA\Property(property: "actual_end_date", type: "string", format: "date-time", nullable: true)]
+    #[OA\Property(property: "distance_km", type: "number", format: "float", example: 120.50)]
+    #[OA\Property(property: "base_price", type: "number", format: "float", example: 500.00)]
+    #[OA\Property(property: "insurance_price", type: "number", format: "float", example: 50.00)]
+    #[OA\Property(property: "distance_fee", type: "number", format: "float", example: 241.00)]
+    #[OA\Property(property: "discount_amount", type: "number", format: "float", example: 25.00)]
+    #[OA\Property(property: "total_price", type: "number", format: "float", example: 766.00)]
+    #[OA\Property(property: "refund_amount", type: "number", format: "float", example: 0.00)]
+    #[OA\Property(property: "status", type: "string", enum: ["reserved", "active", "pending_return", "completed", "cancelled", "early_return"])]
+    #[OA\Property(property: "user_rental_count", type: "integer", example: 3)]
+    #[OA\Property(property: "notes", type: "string", nullable: true)]
+    #[OA\Property(property: "cancellation_reason", type: "string", nullable: true)]
 
     protected $fillable = [
         'user_id',

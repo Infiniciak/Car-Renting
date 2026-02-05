@@ -374,6 +374,511 @@
                 ]
             }
         },
+        "/admin/promo-codes": {
+            "get": {
+                "tags": [
+                    "Promo Codes"
+                ],
+                "summary": "Lista wszystkich kodów promocyjnych",
+                "operationId": "getAdminPromoCodes",
+                "responses": {
+                    "200": {
+                        "description": "Paginowana lista kodów wraz z relacjami",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Promo Codes"
+                ],
+                "summary": "Generowanie nowego kodu dla użytkownika",
+                "operationId": "storeAdminPromoCode",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID użytkownika, do którego trafi kod",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "maximum": 10000,
+                                        "minimum": 1,
+                                        "example": 50
+                                    },
+                                    "expires_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-12-31 23:59:59",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Bonus świąteczny",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Kod utworzony pomyślnie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/promo-codes/{id}": {
+            "delete": {
+                "tags": [
+                    "Promo Codes"
+                ],
+                "summary": "Usuwanie kodu promocyjnego",
+                "operationId": "deleteAdminPromoCode",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID kodu",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Kod usunięty"
+                    },
+                    "422": {
+                        "description": "Nie można usunąć użytego kodu"
+                    },
+                    "404": {
+                        "description": "Kod nie istnieje"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/rentals": {
+            "get": {
+                "tags": [
+                    "Admin Rentals"
+                ],
+                "summary": "Lista wszystkich wynajmów",
+                "description": "Zwraca paginowaną listę wynajmów z możliwością filtrowania po statusie, użytkowniku lub punkcie.",
+                "operationId": "getAdminRentals",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "rental_point_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginowana lista wynajmów"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin Rentals"
+                ],
+                "summary": "Utwórz nowy wynajem/rezerwację (ręcznie)",
+                "operationId": "storeAdminRental",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "car_id",
+                                    "rental_point_start_id",
+                                    "rental_point_end_id",
+                                    "start_date",
+                                    "planned_end_date"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "car_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "rental_point_start_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "rental_point_end_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "planned_end_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "use_extra_insurance": {
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Wynajem utworzony"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji, brak środków lub auto zajęte"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/rentals/{id}": {
+            "get": {
+                "tags": [
+                    "Admin Rentals"
+                ],
+                "summary": "Szczegóły konkretnego wynajmu",
+                "operationId": "getAdminRentalById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pełne dane o wynajmie i transakcjach"
+                    },
+                    "404": {
+                        "description": "Nie znaleziono wynajmu"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin Rentals"
+                ],
+                "summary": "Usuń rekord wynajmu",
+                "operationId": "deleteAdminRental",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usunięto"
+                    },
+                    "422": {
+                        "description": "Nie można usunąć aktywnego wynajmu"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Admin Rentals"
+                ],
+                "summary": "Edycja danych wynajmu",
+                "operationId": "updateAdminRental",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "completed",
+                                            "cancelled",
+                                            "early_return"
+                                        ]
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    },
+                                    "rental_point_end_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Zaktualizowano"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/rentals/{id}/cancel": {
+            "post": {
+                "tags": [
+                    "Admin Rentals"
+                ],
+                "summary": "Anulowanie rezerwacji lub wczesny zwrot",
+                "operationId": "cancelAdminRental",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "cancellation_reason"
+                                ],
+                                "properties": {
+                                    "cancellation_reason": {
+                                        "type": "string",
+                                        "example": "Zmiana planów"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sukces - zwrócono środki"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/rentals/{id}/approve-return": {
+            "post": {
+                "tags": [
+                    "Admin Rentals"
+                ],
+                "summary": "Zatwierdzenie zwrotu auta",
+                "operationId": "approveAdminRentalReturn",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Zwrot zatwierdzony"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/rentals/{id}/reject-return": {
+            "post": {
+                "tags": [
+                    "Admin Rentals"
+                ],
+                "summary": "Odrzucenie zwrotu auta",
+                "operationId": "rejectAdminRentalReturn",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Zwrot odrzucony"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/cars": {
             "get": {
                 "tags": [
@@ -538,6 +1043,242 @@
                 }
             }
         },
+        "/rentals/stats": {
+            "get": {
+                "tags": [
+                    "User Rentals"
+                ],
+                "summary": "Pobierz statystyki lojalnościowe użytkownika",
+                "operationId": "getUserRentalStats",
+                "responses": {
+                    "200": {
+                        "description": "Zwraca liczbę wynajmów i info o nadchodzących zniżkach",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "completed_rentals": {
+                                            "type": "integer"
+                                        },
+                                        "next_discount": {
+                                            "description": "Wartość % następnej zniżki",
+                                            "type": "integer"
+                                        },
+                                        "rentals_until_discount": {
+                                            "type": "integer"
+                                        },
+                                        "balance": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/rentals/calculate": {
+            "post": {
+                "tags": [
+                    "User Rentals"
+                ],
+                "summary": "Oblicz koszt wynajmu przed złożeniem zamówienia",
+                "operationId": "calculateRentalPrice",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "car_id",
+                                    "rental_point_start_id",
+                                    "rental_point_end_id",
+                                    "start_date",
+                                    "planned_end_date"
+                                ],
+                                "properties": {
+                                    "car_id": {
+                                        "type": "integer"
+                                    },
+                                    "rental_point_start_id": {
+                                        "type": "integer"
+                                    },
+                                    "rental_point_end_id": {
+                                        "type": "integer"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "planned_end_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "use_extra_insurance": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Szczegółowa kalkulacja ceny"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/rentals": {
+            "post": {
+                "tags": [
+                    "User Rentals"
+                ],
+                "summary": "Stwórz nową rezerwację lub rozpocznij wynajem",
+                "operationId": "storeUserRental",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "car_id": {
+                                        "type": "integer"
+                                    },
+                                    "rental_point_start_id": {
+                                        "type": "integer"
+                                    },
+                                    "rental_point_end_id": {
+                                        "type": "integer"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "planned_end_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "use_extra_insurance": {
+                                        "type": "boolean"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Wynajem rozpoczęty / zarezerwowany"
+                    },
+                    "422": {
+                        "description": "Brak środków lub auto niedostępne"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/rentals/my": {
+            "get": {
+                "tags": [
+                    "User Rentals"
+                ],
+                "summary": "Lista wypożyczeń zalogowanego użytkownika",
+                "operationId": "getMyRentals",
+                "responses": {
+                    "200": {
+                        "description": "Paginowana lista wynajmów"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/rentals/{id}/cancel": {
+            "post": {
+                "tags": [
+                    "User Rentals"
+                ],
+                "summary": "Anulowanie rezerwacji lub wczesny zwrot przez użytkownika",
+                "operationId": "cancelUserRental",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Zwrócono środki na saldo"
+                    },
+                    "422": {
+                        "description": "Nie można już anulować"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/rentals/{id}/request-return": {
+            "post": {
+                "tags": [
+                    "User Rentals"
+                ],
+                "summary": "Zgłoszenie zwrotu pojazdu do weryfikacji",
+                "operationId": "requestReturnUser",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status zmieniony na pending_return"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/test-swagger": {
             "get": {
                 "summary": "Test endpoint",
@@ -549,8 +1290,169 @@
                 },
                 "servers": [
                     {
-                        "url": "http://localhost:8000/api",
+                        "url": "http://localhost:8001/api",
                         "description": "Local Server"
+                    }
+                ]
+            }
+        },
+        "/profile": {
+            "get": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Pobierz dane profilu",
+                "operationId": "getUserProfile",
+                "responses": {
+                    "200": {
+                        "description": "Zwraca dane zalogowanego użytkownika"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Zaktualizuj dane profilu",
+                "operationId": "updateUserProfile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Jan Kowalski"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jan@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dane zaktualizowane"
+                    },
+                    "422": {
+                        "description": "Błąd walidacji"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/profile/redeem-code": {
+            "post": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Zrealizuj kod promocyjny (wpisywany ręcznie)",
+                "operationId": "redeemPromoCode",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "BONUS2024"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Konto doładowane"
+                    },
+                    "404": {
+                        "description": "Nieprawidłowy kod"
+                    },
+                    "422": {
+                        "description": "Kod wygasł lub użyty"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/profile/codes": {
+            "get": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Lista kodów przypisanych do użytkownika",
+                "operationId": "getUserPromoCodes",
+                "responses": {
+                    "200": {
+                        "description": "Lista kodów"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/profile/codes/{id}/use": {
+            "post": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Zrealizuj kod przypisany do konta (przez ID)",
+                "operationId": "useAssignedPromoCode",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Konto doładowane"
+                    },
+                    "403": {
+                        "description": "Kod nie należy do użytkownika"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -642,6 +1544,169 @@
                     }
                 },
                 "type": "object"
+            },
+            "PromoCode": {
+                "title": "PromoCode",
+                "description": "Model reprezentujący kod promocyjny doładowujący saldo użytkownika",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "code": {
+                        "type": "string",
+                        "example": "RENT-A1B2-C3D4"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50
+                    },
+                    "used": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "used_by_user_id": {
+                        "type": "integer",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "used_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_by_admin_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Bonus lojalnościowy",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "used",
+                            "expired"
+                        ],
+                        "example": "active"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Rental": {
+                "title": "Rental",
+                "description": "Model reprezentujący wypożyczenie pojazdu",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "car_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "rental_point_start_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "rental_point_end_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "planned_end_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "actual_end_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "distance_km": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 120.5
+                    },
+                    "base_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 500
+                    },
+                    "insurance_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50
+                    },
+                    "distance_fee": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 241
+                    },
+                    "discount_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 25
+                    },
+                    "total_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 766
+                    },
+                    "refund_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "reserved",
+                            "active",
+                            "pending_return",
+                            "completed",
+                            "cancelled",
+                            "early_return"
+                        ]
+                    },
+                    "user_rental_count": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cancellation_reason": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             }
         }
     },
@@ -655,8 +1720,24 @@
             "description": "Zarządzanie flotą pojazdów (Admin)"
         },
         {
+            "name": "Promo Codes",
+            "description": "Zarządzanie kodami promocyjnymi przez administratora"
+        },
+        {
+            "name": "Admin Rentals",
+            "description": "Zarządzanie wynajmami i rezerwacjami z poziomu panelu administratora"
+        },
+        {
             "name": "Public Cars",
             "description": "Operacje na samochodach dostępne dla każdego użytkownika"
+        },
+        {
+            "name": "User Rentals",
+            "description": "Obsługa wypożyczeń po stronie klienta"
+        },
+        {
+            "name": "User Profile",
+            "description": "Zarządzanie profilem użytkownika i portfelem"
         }
     ]
 }

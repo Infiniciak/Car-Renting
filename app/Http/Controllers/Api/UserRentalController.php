@@ -10,9 +10,32 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: "User Rentals", description: "Obsługa wypożyczeń po stronie klienta")]
 class UserRentalController extends Controller
 {
+    #[OA\Get(
+        path: "/rentals/stats",
+        operationId: "getUserRentalStats",
+        summary: "Pobierz statystyki lojalnościowe użytkownika",
+        security: [["bearerAuth" => []]],
+        tags: ["User Rentals"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Zwraca liczbę wynajmów i info o nadchodzących zniżkach",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "completed_rentals", type: "integer"),
+                        new OA\Property(property: "next_discount", type: "integer", description: "Wartość % następnej zniżki"),
+                        new OA\Property(property: "rentals_until_discount", type: "integer"),
+                        new OA\Property(property: "balance", type: "number")
+                    ]
+                )
+            )
+        ]
+    )]
     public function getUserRentalCount()
     {
         $user = auth()->user();
@@ -53,6 +76,30 @@ class UserRentalController extends Controller
         ]);
     }
 
+    #[OA\Post(
+        path: "/rentals/calculate",
+        operationId: "calculateRentalPrice",
+        summary: "Oblicz koszt wynajmu przed złożeniem zamówienia",
+        security: [["bearerAuth" => []]],
+        tags: ["User Rentals"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["car_id", "rental_point_start_id", "rental_point_end_id", "start_date", "planned_end_date"],
+                properties: [
+                    new OA\Property(property: "car_id", type: "integer"),
+                    new OA\Property(property: "rental_point_start_id", type: "integer"),
+                    new OA\Property(property: "rental_point_end_id", type: "integer"),
+                    new OA\Property(property: "start_date", type: "string", format: "date"),
+                    new OA\Property(property: "planned_end_date", type: "string", format: "date"),
+                    new OA\Property(property: "use_extra_insurance", type: "boolean")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Szczegółowa kalkulacja ceny")
+        ]
+    )]
     public function calculatePrice(Request $request)
     {
         $validated = $request->validate([
@@ -101,6 +148,31 @@ class UserRentalController extends Controller
         ]);
     }
 
+    #[OA\Post(
+        path: "/rentals",
+        operationId: "storeUserRental",
+        summary: "Stwórz nową rezerwację lub rozpocznij wynajem",
+        security: [["bearerAuth" => []]],
+        tags: ["User Rentals"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "car_id", type: "integer"),
+                    new OA\Property(property: "rental_point_start_id", type: "integer"),
+                    new OA\Property(property: "rental_point_end_id", type: "integer"),
+                    new OA\Property(property: "start_date", type: "string", format: "date-time"),
+                    new OA\Property(property: "planned_end_date", type: "string", format: "date-time"),
+                    new OA\Property(property: "use_extra_insurance", type: "boolean"),
+                    new OA\Property(property: "notes", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Wynajem rozpoczęty / zarezerwowany"),
+            new OA\Response(response: 422, description: "Brak środków lub auto niedostępne")
+        ]
+    )]
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -195,6 +267,16 @@ class UserRentalController extends Controller
         });
     }
 
+    #[OA\Get(
+        path: "/rentals/my",
+        operationId: "getMyRentals",
+        summary: "Lista wypożyczeń zalogowanego użytkownika",
+        security: [["bearerAuth" => []]],
+        tags: ["User Rentals"],
+        responses: [
+            new OA\Response(response: 200, description: "Paginowana lista wynajmów")
+        ]
+    )]
     public function myRentals()
     {
         $user = auth()->user();
@@ -237,6 +319,20 @@ class UserRentalController extends Controller
         return 0;
     }
 
+    #[OA\Post(
+        path: "/rentals/{id}/cancel",
+        operationId: "cancelUserRental",
+        summary: "Anulowanie rezerwacji lub wczesny zwrot przez użytkownika",
+        security: [["bearerAuth" => []]],
+        tags: ["User Rentals"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Zwrócono środki na saldo"),
+            new OA\Response(response: 422, description: "Nie można już anulować")
+        ]
+    )]
     public function cancel(Request $request, Rental $rental)
     {
         if ($rental->user_id !== auth()->id()) {
@@ -290,6 +386,19 @@ class UserRentalController extends Controller
         });
     }
 
+    #[OA\Post(
+        path: "/rentals/{id}/request-return",
+        operationId: "requestReturnUser",
+        summary: "Zgłoszenie zwrotu pojazdu do weryfikacji",
+        security: [["bearerAuth" => []]],
+        tags: ["User Rentals"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Status zmieniony na pending_return")
+        ]
+    )]
     public function requestReturn(Request $request, Rental $rental)
     {
         $user = $request->user();

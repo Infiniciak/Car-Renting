@@ -6,10 +6,29 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    title: "PromoCode",
+    description: "Model reprezentujący kod promocyjny doładowujący saldo użytkownika",
+    type: "object"
+)]
 class PromoCode extends Model
 {
     use HasFactory;
+
+    #[OA\Property(property: "id", type: "integer", example: 1)]
+    #[OA\Property(property: "code", type: "string", example: "RENT-A1B2-C3D4")]
+    #[OA\Property(property: "amount", type: "number", format: "float", example: 50.00)]
+    #[OA\Property(property: "used", type: "boolean", example: false)]
+    #[OA\Property(property: "used_by_user_id", type: "integer", nullable: true, example: 5)]
+    #[OA\Property(property: "used_at", type: "string", format: "date-time", nullable: true)]
+    #[OA\Property(property: "created_by_admin_id", type: "integer", example: 1)]
+    #[OA\Property(property: "expires_at", type: "string", format: "date-time", nullable: true)]
+    #[OA\Property(property: "description", type: "string", nullable: true, example: "Bonus lojalnościowy")]
+    #[OA\Property(property: "status", type: "string", enum: ["active", "used", "expired"], example: "active")]
+    #[OA\Property(property: "created_at", type: "string", format: "date-time")]
+    #[OA\Property(property: "updated_at", type: "string", format: "date-time")]
 
     protected $table = 'promo_codes';
 

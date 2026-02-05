@@ -11,9 +11,28 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: "Admin Rentals", description: "Zarządzanie wynajmami i rezerwacjami z poziomu panelu administratora")]
 class RentalController extends Controller
 {
+    #[OA\Get(
+        path: "/admin/rentals",
+        operationId: "getAdminRentals",
+        summary: "Lista wszystkich wynajmów",
+        description: "Zwraca paginowaną listę wynajmów z możliwością filtrowania po statusie, użytkowniku lub punkcie.",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Rentals"],
+        parameters: [
+            new OA\Parameter(name: "status", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "user_id", in: "query", required: false, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "rental_point_id", in: "query", required: false, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", in: "query", required: false, schema: new OA\Schema(type: "integer"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Paginowana lista wynajmów")
+        ]
+    )]
     public function index(Request $request)
     {
         $query = Rental::with([
@@ -43,6 +62,20 @@ class RentalController extends Controller
         return response()->json($rentals);
     }
 
+    #[OA\Get(
+        path: "/admin/rentals/{id}",
+        operationId: "getAdminRentalById",
+        summary: "Szczegóły konkretnego wynajmu",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Rentals"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Pełne dane o wynajmie i transakcjach"),
+            new OA\Response(response: 404, description: "Nie znaleziono wynajmu")
+        ]
+    )]
     public function show(Rental $rental)
     {
         $rental->load([
@@ -56,6 +89,33 @@ class RentalController extends Controller
         return response()->json($rental);
     }
 
+    #[OA\Post(
+        path: "/admin/rentals",
+        operationId: "storeAdminRental",
+        summary: "Utwórz nowy wynajem/rezerwację (ręcznie)",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Rentals"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["user_id", "car_id", "rental_point_start_id", "rental_point_end_id", "start_date", "planned_end_date"],
+                properties: [
+                    new OA\Property(property: "user_id", type: "integer", example: 1),
+                    new OA\Property(property: "car_id", type: "integer", example: 1),
+                    new OA\Property(property: "rental_point_start_id", type: "integer", example: 1),
+                    new OA\Property(property: "rental_point_end_id", type: "integer", example: 2),
+                    new OA\Property(property: "start_date", type: "string", format: "date-time"),
+                    new OA\Property(property: "planned_end_date", type: "string", format: "date-time"),
+                    new OA\Property(property: "use_extra_insurance", type: "boolean", default: false),
+                    new OA\Property(property: "notes", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Wynajem utworzony"),
+            new OA\Response(response: 422, description: "Błąd walidacji, brak środków lub auto zajęte")
+        ]
+    )]
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -65,7 +125,7 @@ class RentalController extends Controller
             'rental_point_end_id' => 'required|exists:rental_points,id',
             'start_date' => 'required|date|after_or_equal:now',
             'planned_end_date' => 'required|date|after:start_date',
-            'use_extra_insurance' => 'boolean', // NOWE POLE
+            'use_extra_insurance' => 'boolean',
             'notes' => 'nullable|string',
         ]);
 
@@ -93,12 +153,9 @@ class RentalController extends Controller
         $basePrice = $car->getPriceWithDiscount() * $days;
         $distanceFee = $distance * 2;
 
-        // --- ZMODYFIKOWANA LOGIKA UBEZPIECZENIA ---
         $useExtra = $request->boolean('use_extra_insurance');
-        // Jeśli AC wybrane, bierzemy extra_insurance_per_day, w przeciwnym razie insurance_per_day
         $insuranceRate = $useExtra ? $car->extra_insurance_per_day : $car->insurance_per_day;
         $insurancePrice = $insuranceRate * $days;
-        // ------------------------------------------
 
         $userRentalCount = $user->rentals()
             ->whereIn('status', ['completed', 'active', 'early_return'])
@@ -125,7 +182,7 @@ class RentalController extends Controller
                 'distance_km' => $distance,
                 'base_price' => $basePrice,
                 'insurance_price' => $insurancePrice,
-                'use_extra_insurance' => $useExtra, // ZAPISUJEMY WYBÓR
+                'use_extra_insurance' => $useExtra,
                 'distance_fee' => $distanceFee,
                 'discount_amount' => $discountAmount,
                 'total_price' => $totalPrice,
@@ -155,6 +212,28 @@ class RentalController extends Controller
         });
     }
 
+    #[OA\Patch(
+        path: "/admin/rentals/{id}",
+        operationId: "updateAdminRental",
+        summary: "Edycja danych wynajmu",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Rentals"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "status", type: "string", enum: ["active", "completed", "cancelled", "early_return"]),
+                    new OA\Property(property: "notes", type: "string"),
+                    new OA\Property(property: "rental_point_end_id", type: "integer")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Zaktualizowano")
+        ]
+    )]
     public function update(Request $request, Rental $rental)
     {
         $validated = $request->validate([
@@ -177,6 +256,20 @@ class RentalController extends Controller
         ]);
     }
 
+    #[OA\Delete(
+        path: "/admin/rentals/{id}",
+        operationId: "deleteAdminRental",
+        summary: "Usuń rekord wynajmu",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Rentals"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Usunięto"),
+            new OA\Response(response: 422, description: "Nie można usunąć aktywnego wynajmu")
+        ]
+    )]
     public function destroy(Rental $rental)
     {
         if (in_array($rental->status, ['active', 'reserved'])) {
@@ -192,6 +285,28 @@ class RentalController extends Controller
         ]);
     }
 
+    #[OA\Post(
+        path: "/admin/rentals/{id}/cancel",
+        operationId: "cancelAdminRental",
+        summary: "Anulowanie rezerwacji lub wczesny zwrot",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Rentals"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["cancellation_reason"],
+                properties: [
+                    new OA\Property(property: "cancellation_reason", type: "string", example: "Zmiana planów")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Sukces - zwrócono środki")
+        ]
+    )]
     public function cancel(Request $request, Rental $rental)
     {
         if (!$rental->canBeCancelled()) {
@@ -289,6 +404,22 @@ class RentalController extends Controller
         return round($roadDistance, 2);
     }
 
+    #[OA\Post(
+        path: "/admin/rentals/{id}/approve-return",
+        operationId: "approveAdminRentalReturn",
+        summary: "Zatwierdzenie zwrotu auta",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Rentals"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(properties: [new OA\Property(property: "notes", type: "string")])
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Zwrot zatwierdzony")
+        ]
+    )]
     public function approveReturn(Request $request, Rental $rental)
     {
         if ($rental->status !== 'pending_return') {
@@ -316,6 +447,23 @@ class RentalController extends Controller
         ]);
     }
 
+    #[OA\Post(
+        path: "/admin/rentals/{id}/reject-return",
+        operationId: "rejectAdminRentalReturn",
+        summary: "Odrzucenie zwrotu auta",
+        security: [["bearerAuth" => []]],
+        tags: ["Admin Rentals"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(properties: [new OA\Property(property: "reason", type: "string")])
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Zwrot odrzucony")
+        ]
+    )]
     public function rejectReturn(Request $request, Rental $rental)
     {
         if ($rental->status !== 'pending_return') {
