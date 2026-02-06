@@ -132,10 +132,10 @@ const AdminCars = () => {
         } catch (err) { alert("Błąd usuwania"); }
     };
 
-    if (loading) return <div className="min-h-screen bg-[#11111d] flex items-center justify-center text-white italic text-xl">Wczytywanie...</div>;
+    if (loading) return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-900 dark:text-white italic text-xl transition-colors duration-300">Wczytywanie...</div>;
 
     return (
-        <div className="min-h-screen bg-[#11111d] p-8 text-white font-sans">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 text-gray-900 dark:text-white font-sans transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
                 {/* NAGŁÓWEK I WYSZUKIWARKA */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
@@ -146,7 +146,7 @@ const AdminCars = () => {
                     <div className="flex gap-4">
                         <input
                             type="text" placeholder="Szukaj (marka, rejestracja)..."
-                            className="bg-[#1e1e2d] border border-white/10 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500 transition-all"
+                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500 text-gray-900 dark:text-white transition-all"
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                         <button onClick={handleOpenAddModal} className="bg-indigo-600 hover:bg-indigo-700 px-6 py-4 rounded-2xl font-black transition-all">
@@ -161,10 +161,10 @@ const AdminCars = () => {
                         c.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         c.registration_number.toLowerCase().includes(searchTerm.toLowerCase())
                     ).map(car => (
-                        <div key={car.id} className="bg-[#1e1e2d] p-8 rounded-[2.5rem] border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center transition-all hover:border-indigo-500/50 shadow-xl">
+                        <div key={car.id} className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-200 dark:border-gray-700 flex flex-col lg:flex-row justify-between items-start lg:items-center transition-all hover:border-indigo-500/50 shadow-xl">
                             <div className="flex flex-col md:flex-row gap-8 w-full">
                                 {/* ZDJĘCIE W KAFELKU */}
-                                <div className="h-24 w-36 bg-black/40 rounded-2xl overflow-hidden flex items-center justify-center border border-white/5 flex-shrink-0 shadow-inner">
+                                <div className="h-24 w-36 bg-gray-100 dark:bg-gray-700 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-200 dark:border-gray-600 flex-shrink-0 shadow-inner transition-colors duration-300">
                                     {car.image_path ? (
                                         <img src={STORAGE_URL + car.image_path} alt="car" className="w-full h-full object-cover" />
                                     ) : (
@@ -230,50 +230,50 @@ const AdminCars = () => {
             {/* MODAL */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
-                    <div className="bg-[#1e1e2d] p-10 rounded-[3rem] border border-white/10 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+                    <div className="bg-white dark:bg-gray-800 p-10 rounded-[3rem] border border-gray-200 dark:border-gray-700 max-w-2xl w-full shadow-2xl overflow-y-auto max-h-[90vh] transition-colors duration-300">
                         <h2 className="text-3xl font-black mb-8 uppercase text-indigo-400 tracking-tighter">Specyfikacja Pojazdu</h2>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Marka</label>
-                                    <input className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} required />
+                                    <input className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-colors duration-200" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} required />
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Model</label>
-                                    <input className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} required />
+                                    <input className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-colors duration-200" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} required />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rejestracja</label>
-                                    <input className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.registration_number} onChange={e => setFormData({...formData, registration_number: e.target.value})} required />
+                                    <input className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white transition-colors duration-200" value={formData.registration_number} onChange={e => setFormData({...formData, registration_number: e.target.value})} required />
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rok Produkcji</label>
-                                    <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
+                                    <input type="number" className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white transition-colors duration-200" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Miejsca</label>
-                                    <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.seats} onChange={e => setFormData({...formData, seats: e.target.value})} />
+                                    <input type="number" className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white transition-colors duration-200" value={formData.seats} onChange={e => setFormData({...formData, seats: e.target.value})} />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Punkt Odbioru</label>
-                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-gray-400" value={formData.rental_point_id || ''} onChange={e => setFormData({...formData, rental_point_id: e.target.value})}>
+                                    <select className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-300 transition-colors duration-200" value={formData.rental_point_id || ''} onChange={e => setFormData({...formData, rental_point_id: e.target.value})}>
                                         <option value="">Brak (Magazyn)</option>
                                         {points.map(p => <option key={p.id} value={p.id}>{p.city} - {p.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Cena za dobę</label>
-                                    <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-emerald-400 font-bold" value={formData.price_per_day} onChange={e => setFormData({...formData, price_per_day: e.target.value})} required />
+                                    <input type="number" className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-emerald-600 dark:text-emerald-400 font-bold transition-colors duration-200" value={formData.price_per_day} onChange={e => setFormData({...formData, price_per_day: e.target.value})} required />
                                 </div>
                             </div>
 
-                            <div className="flex gap-8 p-6 bg-[#11111d] rounded-3xl justify-center">
+                            <div className="flex gap-8 p-6 bg-gray-50 dark:bg-gray-700 rounded-3xl justify-center transition-colors duration-300">
                                 <label className="flex items-center gap-3 cursor-pointer group">
                                     <input type="checkbox" className="w-6 h-6 accent-indigo-600 rounded" checked={formData.has_gps} onChange={e => setFormData({...formData, has_gps: e.target.checked})} />
                                     <span className="text-sm font-black group-hover:text-indigo-400 transition">GPS</span>
@@ -286,7 +286,7 @@ const AdminCars = () => {
 
                             <div className="space-y-4">
                                 <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Zdjęcie pojazdu</label>
-                                <div className="relative h-48 w-full bg-black/40 rounded-3xl overflow-hidden border border-white/5 flex items-center justify-center">
+                                <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-700 rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors duration-300">
                                     {imagePreview ? (
                                         <>
                                             <img src={imagePreview} className="w-full h-full object-cover" alt="Podgląd" />
@@ -303,7 +303,7 @@ const AdminCars = () => {
                                 </div>
                                 <input
                                     type="file" accept="image/*"
-                                    className="w-full bg-[#11111d] p-4 rounded-2xl text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition-all cursor-pointer"
+                                    className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl text-sm text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition-all cursor-pointer"
                                     onChange={handleImageChange}
                                 />
                             </div>

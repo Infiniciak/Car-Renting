@@ -1,9 +1,12 @@
-import './bootstrap';
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './src/App'; // Nowa ścieżka do mniejszego App.jsx
+import { createRoot } from 'react-dom/client';
+import App from './src/App.jsx';
+import '../css/app.css';
 
-ReactDOM.createRoot(document.getElementById('app')).render(
+const container = document.getElementById('app');
+const root = createRoot(container);
+
+root.render(
     <React.StrictMode>
         <App />
     </React.StrictMode>
