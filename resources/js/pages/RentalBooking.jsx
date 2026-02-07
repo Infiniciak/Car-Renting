@@ -157,6 +157,17 @@ const RentalBooking = () => {
                                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Punkt odbioru</span>
                                         <span className="text-sm font-bold text-indigo-600 uppercase italic tracking-tighter">{car.rental_point?.city}</span>
                                     </div>
+                                    {rentalStats && (
+                                        <div className="mt-4 p-4 bg-indigo-50 rounded-2xl">
+                                            <p className="text-xs font-bold text-indigo-400 uppercase mb-1">Twoje wypożyczenia</p>
+                                            <p className="text-2xl font-black text-indigo-600">{rentalStats.completed_rentals}</p>
+                                            {rentalStats.rentals_until_discount > 0 && (
+                                                <p className="text-xs text-indigo-500 mt-2">
+                                                    Za {rentalStats.rentals_until_discount + 1} wypożyczeń: {rentalStats.next_discount}% rabatu
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
