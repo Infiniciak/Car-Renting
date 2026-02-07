@@ -38,6 +38,9 @@ echo [*] Generuje klucz i migruje baze...
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate:fresh --seed
 
+echo [*] Tworze link symboliczny do storage...
+docker compose exec app php artisan storage:link
+
 :: 7. BUDOWANIE FRONTENDU
 echo [*] Buduje manifest Vite...
 docker compose exec app npm run build
