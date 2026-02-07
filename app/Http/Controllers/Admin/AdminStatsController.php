@@ -75,33 +75,48 @@ class AdminStatsController extends Controller
         ]);
     }
 
-    public function getRevenueByMonth()
+   public function getRevenueByMonth()
     {
         $rentals = Rental::whereIn('status', ['completed', 'active', 'early_return'])
-            ->where('created_at', '>=', now()->subMonths(12))
-            ->get()
-            ->groupBy(function($rental) {
-                return $rental->created_at->format('Y-m');
-            })
-            ->map(function($group, $key) {
-                $monthNames = [
-                    '01' => 'Sty', '02' => 'Lut', '03' => 'Mar', '04' => 'Kwi',
-                    '05' => 'Maj', '06' => 'Cze', '07' => 'Lip', '08' => 'Sie',
-                    '09' => 'Wrz', '10' => 'Paź', '11' => 'Lis', '12' => 'Gru'
+            ->whereNotNull('start_date')
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        $monthNames = [
+            '01' => 'Sty', '02' => 'Lut', '03' => 'Mar', '04' => 'Kwi',
+            '05' => 'Maj', '06' => 'Cze', '07' => 'Lip', '08' => 'Sie',
+            '09' => 'Wrz', '10' => 'Paź', '11' => 'Lis', '12' => 'Gru'
+        ];
+
+        $grouped = [];
+
+        foreach ($rentals as $rental) {
+            $date = \Carbon\Carbon::parse($rental->start_date);
+            $key = $date->format('Y-m');
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'month' => $monthNames[$date->format('m')] . ' ' . $date->format('Y'),
+                    'revenue' => 0,
+                    'rentals_count' => 0
                 ];
+            }
 
-                $parts = explode('-', $key);
-                $monthName = $monthNames[$parts[1]] ?? $parts[1];
+            $grouped[$key]['revenue'] += $rental->total_price;
+            $grouped[$key]['rentals_count']++;
+        }
 
-                return [
-                    'month' => $monthName . ' ' . $parts[0],
-                    'revenue' => round($group->sum('total_price'), 2),
-                    'rentals_count' => $group->count(),
-                ];
-            })
-            ->values();
+        ksort($grouped);
 
-        return response()->json($rentals);
+        $result = array_map(function($item) {
+            return [
+                'month' => $item['month'],
+                'revenue' => round($item['revenue'], 2),
+                'rentals_count' => $item['rentals_count']
+            ];
+        }, $grouped);
+
+        return response()->json(array_values($result));
     }
 
     public function getRevenueByPoint()
