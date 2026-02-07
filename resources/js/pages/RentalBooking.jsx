@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const RentalBooking = () => {
     const { carId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
     const STORAGE_URL = 'http://localhost:8000/storage/';
@@ -19,7 +21,8 @@ const RentalBooking = () => {
         rental_point_end_id: '',
         start_date: '',
         planned_end_date: '',
-        notes: ''
+        notes: '',
+        use_extra_insurance: location.state?.extraInsurance || false
     });
 
     const [endPointSearch, setEndPointSearch] = useState('');
@@ -34,7 +37,7 @@ const RentalBooking = () => {
         if (formData.rental_point_end_id && formData.start_date && formData.planned_end_date && car) {
             calculatePrice();
         }
-    }, [formData.rental_point_end_id, formData.start_date, formData.planned_end_date]);
+    }, [formData.rental_point_end_id, formData.start_date, formData.planned_end_date, formData.use_extra_insurance]);
 
     const fetchData = async () => {
         try {
@@ -49,7 +52,7 @@ const RentalBooking = () => {
             setRentalStats(statsRes.data);
             setLoading(false);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error:', error);
             setLoading(false);
         }
     };
@@ -62,34 +65,31 @@ const RentalBooking = () => {
                 rental_point_start_id: car.rental_point_id,
                 rental_point_end_id: formData.rental_point_end_id,
                 start_date: formData.start_date,
-                planned_end_date: formData.planned_end_date
+                planned_end_date: formData.planned_end_date,
+                use_extra_insurance: formData.use_extra_insurance
             }, config);
 
             setPriceCalculation(res.data);
             setCalculating(false);
         } catch (error) {
-            console.error('Error calculating price:', error);
+            console.error('Calculation error:', error);
             setCalculating(false);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         try {
             await axios.post('http://localhost:8000/api/user/rentals', {
+                ...formData,
                 car_id: carId,
                 rental_point_start_id: car.rental_point_id,
-                rental_point_end_id: formData.rental_point_end_id,
-                start_date: formData.start_date,
-                planned_end_date: formData.planned_end_date,
-                notes: formData.notes
             }, config);
 
             alert('Rezerwacja utworzona pomyślnie!');
             navigate('/user/rentals');
         } catch (error) {
-            alert(error.response?.data?.message || 'Błąd tworzenia rezerwacji');
+            alert(error.response?.data?.message || 'Błąd rezerwacji');
         }
     };
 
@@ -242,6 +242,26 @@ const RentalBooking = () => {
                                     </div>
                                 </div>
 
+                                <div
+                                    onClick={() => setFormData({...formData, use_extra_insurance: !formData.use_extra_insurance})}
+                                    className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                                        formData.use_extra_insurance 
+                                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-inner' 
+                                        : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 hover:border-indigo-100 dark:hover:border-gray-600'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-2xl">{formData.use_extra_insurance ? '💎' : '🛡️'}</span>
+                                        <div>
+                                            <p className="font-black text-gray-800 dark:text-gray-200 uppercase text-xs tracking-widest">Ubezpieczenie AC Premium</p>
+                                            <p className="text-[10px] text-gray-500 dark:text-gray-400 italic">Ochrona przed kradzieżą i uszkodzeniami</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.use_extra_insurance ? 'bg-emerald-500 border-emerald-500 shadow-md' : 'border-gray-300 dark:border-gray-600'}`}>
+                                        {formData.use_extra_insurance && <span className="text-white text-[10px]">✓</span>}
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label className="block text-xs font-bold text-gray-400 dark:text-gray-300 uppercase mb-2">Uwagi (opcjonalne)</label>
                                     <textarea
@@ -271,12 +291,13 @@ const RentalBooking = () => {
                                                 <span className="font-bold text-gray-900 dark:text-white">{priceCalculation.distance_fee} PLN</span>
                                             </div>
 
-                                            {priceCalculation && parseFloat(priceCalculation.discount_amount) > 0 && (
-                                            <div className="flex justify-between text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg mb-2">
-                                                <span>Rabat lojalnościowy</span>
-                                                <span>-{priceCalculation.discount_amount} PLN</span>
-                                            </div>
-                                        )}
+                                            {/* ZACHOWANE Z DRUGIEJ GAŁĘZI: Wyświetlanie rabatu jeśli istnieje */}
+                                            {parseFloat(priceCalculation.discount_amount) > 0 && (
+                                                <div className="flex justify-between text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800/30">
+                                                    <span className="flex items-center gap-1.5">🎁 Rabat lojalnościowy</span>
+                                                    <span>-{priceCalculation.discount_amount} PLN</span>
+                                                </div>
+                                            )}
 
                                             <div className="pt-3 border-t border-gray-300 dark:border-gray-700 flex justify-between items-center">
                                                 <span className="text-gray-900 dark:text-white font-black uppercase text-sm">Razem</span>
@@ -286,13 +307,10 @@ const RentalBooking = () => {
                                             <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
                                                 <div className="flex justify-between text-xs">
                                                     <span className="text-gray-500 dark:text-gray-300">Twoje saldo</span>
-                                                    <span className={`font-bold ${priceCalculation.has_enough_balance ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    <span className={`font-bold ${priceCalculation.has_enough_balance ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                                                         {priceCalculation.user_balance} PLN
                                                     </span>
                                                 </div>
-                                                {!priceCalculation.has_enough_balance && (
-                                                    <p className="text-xs text-red-600 mt-2">Niewystarczające saldo. Doładuj konto.</p>
-                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -301,9 +319,9 @@ const RentalBooking = () => {
                                 <button
                                     type="submit"
                                     disabled={!priceCalculation || !priceCalculation.has_enough_balance || calculating}
-                                    className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                    className="w-full py-6 rounded-3xl bg-indigo-600 text-white font-black uppercase text-xs tracking-[0.3em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-500/20 active:scale-95 disabled:opacity-30"
                                 >
-                                    {calculating ? 'Obliczam...' : 'Potwierdź rezerwację'}
+                                    {calculating ? 'Przeliczam dane...' : 'Potwierdź rezerwację'}
                                 </button>
                             </form>
                         </div>

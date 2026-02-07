@@ -61,28 +61,32 @@ class UserRentalController extends Controller
             'rental_point_end_id' => 'required|exists:rental_points,id',
             'start_date' => 'required|date|after_or_equal:now',
             'planned_end_date' => 'required|date|after:start_date',
+            'use_extra_insurance' => 'boolean'
         ]);
 
         $car = Car::findOrFail($validated['car_id']);
         $startDate = Carbon::parse($validated['start_date']);
         $endDate = Carbon::parse($validated['planned_end_date']);
-
         $days = max(1, $startDate->diffInDays($endDate));
 
-        $distance = $this->calculateDistance(
-            $validated['rental_point_start_id'],
-            $validated['rental_point_end_id']
-        );
+        $distance = $this->calculateDistance($validated['rental_point_start_id'], $validated['rental_point_end_id']);
 
         $basePrice = $car->getPriceWithDiscount() * $days;
-        $insurancePrice = $car->insurance_per_day * $days;
+
+        // --- ZMODYFIKOWANA LOGIKA UBEZPIECZENIA ---
+        $useExtra = $request->boolean('use_extra_insurance');
+        // Jeśli zaznaczono AC, bierzemy extra_insurance_per_day z modelu, inaczej insurance_per_day z bazy
+        $insuranceRate = $useExtra ? $car->extra_insurance_per_day : $car->insurance_per_day;
+        $insurancePrice = $insuranceRate * $days;
+        // ------------------------------------------
+
         $distanceFee = $distance * 2;
 
         $user = auth()->user();
         $userRentalCount = $user->rentals()->whereIn('status', ['completed', 'active', 'early_return'])->count() + 1;
         $discountAmount = $this->calculateLoyaltyDiscount($userRentalCount, $basePrice);
 
-        $totalPrice = $basePrice + $insurancePrice + $distanceFee - $discountAmount;
+        $totalPrice = ($basePrice + $insurancePrice + $distanceFee) - $discountAmount;
 
         return response()->json([
             'days' => $days,
@@ -105,6 +109,7 @@ class UserRentalController extends Controller
             'rental_point_end_id' => 'required|exists:rental_points,id',
             'start_date' => 'required|date|after_or_equal:now',
             'planned_end_date' => 'required|date|after:start_date',
+            'use_extra_insurance' => 'boolean', // DODANO DO VALIDACJI
             'notes' => 'nullable|string',
         ]);
 
@@ -126,7 +131,13 @@ class UserRentalController extends Controller
         );
 
         $basePrice = $car->getPriceWithDiscount() * $days;
-        $insurancePrice = $car->insurance_per_day * $days;
+
+        // --- ZMODYFIKOWANA LOGIKA UBEZPIECZENIA ---
+        $useExtra = $request->boolean('use_extra_insurance');
+        $insuranceRate = $useExtra ? $car->extra_insurance_per_day : $car->insurance_per_day;
+        $insurancePrice = $insuranceRate * $days;
+        // ------------------------------------------
+
         $distanceFee = $distance * 2;
 
         $userRentalCount = $user->rentals()
@@ -142,7 +153,7 @@ class UserRentalController extends Controller
             ], 422);
         }
 
-        return DB::transaction(function () use ($validated, $user, $car, $status, $distance, $basePrice, $insurancePrice, $distanceFee, $discountAmount, $totalPrice, $userRentalCount) {
+        return DB::transaction(function () use ($validated, $user, $car, $status, $distance, $basePrice, $insurancePrice, $distanceFee, $discountAmount, $totalPrice, $userRentalCount, $useExtra) {
 
             $rental = Rental::create([
                 'user_id' => $user->id,
@@ -154,6 +165,7 @@ class UserRentalController extends Controller
                 'distance_km' => $distance,
                 'base_price' => $basePrice,
                 'insurance_price' => $insurancePrice,
+                'use_extra_insurance' => $useExtra, // ZAPISUJEMY INFORMACJĘ
                 'distance_fee' => $distanceFee,
                 'discount_amount' => $discountAmount,
                 'total_price' => $totalPrice,

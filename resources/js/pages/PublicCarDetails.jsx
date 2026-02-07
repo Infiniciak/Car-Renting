@@ -8,6 +8,9 @@ const CarDetails = () => {
     const [car, setCar] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // NOWE: Stan dla dodatkowego ubezpieczenia
+    const [wantsExtraInsurance, setWantsExtraInsurance] = useState(false);
+
     // Sprawdzamy stan zalogowania na podstawie tokena
     const isLoggedIn = !!localStorage.getItem('token');
 
@@ -27,11 +30,35 @@ const CarDetails = () => {
         fetchCarDetails();
     }, [id]);
 
+    // --- LOGIKA WYLICZANIA STAWKI DODATKOWEGO AC (ZGODNA Z MODELEM) ---
+    const calculateExtraInsurance = () => {
+        if (!car) return 0;
+        const base = parseFloat(car.price_per_day);
+        let multiplier = 1.0;
+        const typeMultipliers = { 'SUV': 1.4, 'van': 1.3, 'coupe': 1.8, 'electric': 1.5, 'sedan': 1.0, 'hatchback': 0.9 };
+        multiplier *= (typeMultipliers[car.type] || 1.0);
+        const premiumBrands = ['BMW', 'Mercedes', 'Audi', 'Tesla', 'Porsche'];
+        if (premiumBrands.includes(car.brand)) multiplier *= 1.3;
+        const age = new Date().getFullYear() - car.year;
+        if (age <= 2) multiplier *= 1.25;
+        return Math.round((base * 0.12) * multiplier);
+    };
+
+    const dailyPrice = car ? parseFloat(car.price_per_day) : 0;
+    const standardInsurance = car ? parseFloat(car.insurance_per_day) : 0;
+    const extraInsurancePrice = calculateExtraInsurance();
+
+    // LOGIKA: AC zastępuje Standard. Suma do wyświetlenia na górze panelu.
+    const finalDailyPrice = wantsExtraInsurance
+        ? dailyPrice + extraInsurancePrice
+        : dailyPrice + standardInsurance;
+
     const handleBookingClick = () => {
         if (!isLoggedIn) {
             navigate('/login');
         } else {
-            navigate(`/rental/${id}`);
+            // Przekazujemy wybór ubezpieczenia do ekranu rezerwacji
+            navigate(`/rental/${id}`, { state: { extraInsurance: wantsExtraInsurance } });
         }
     };
 
@@ -113,10 +140,10 @@ const CarDetails = () => {
                     <div className="lg:w-1/3">
                         <div className="bg-white dark:bg-gray-800 p-8 rounded-[3rem] shadow-xl border border-gray-100 dark:border-gray-700 sticky top-28 transition-all">
                             <div className="mb-8">
-                                <p className="text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest mb-1">Cena wynajmu</p>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Łączna cena za dobę</p>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-5xl font-black text-gray-900 dark:text-white tracking-tighter">{car.price_per_day}</span>
-                                    <span className="text-indigo-600 dark:text-indigo-300 font-bold text-lg">PLN / doba</span>
+                                    <span className="text-5xl font-black text-gray-900 tracking-tighter">{finalDailyPrice}</span>
+                                    <span className="text-indigo-600 font-bold text-lg">PLN / doba</span>
                                 </div>
                             </div>
 
@@ -127,9 +154,36 @@ const CarDetails = () => {
                                         📍 {car.rental_point ? `${car.rental_point.name}, ${car.rental_point.city}` : "Magazyn centralny"}
                                     </p>
                                 </div>
-                                <div className="p-5 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-[2rem] border border-emerald-100 dark:border-emerald-700/40">
-                                    <p className="text-[10px] font-black text-emerald-400 uppercase mb-1 tracking-widest">Ubezpieczenie</p>
-                                    <p className="font-bold text-emerald-600 dark:text-emerald-300 text-sm">Pełna ochrona w cenie</p>
+
+                                {/* UBEZPIECZENIE PODSTAWOWE - Wliczone domyślnie */}
+                                <div className={`p-5 rounded-[2rem] border transition-all flex items-center justify-between ${!wantsExtraInsurance ? 'bg-emerald-50 border-emerald-100 opacity-100' : 'bg-gray-50 border-gray-100 opacity-50'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-xs">🛡️</div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Ochrona Standard</p>
+                                            <p className="font-bold text-emerald-700 text-[10px] italic">Wliczone OC/NW</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm font-black text-emerald-600">+{standardInsurance} PLN</p>
+                                </div>
+
+                                {/* UBEZPIECZENIE DODATKOWE - AC Premium (Zastępuje Standard po kliknięciu) */}
+                                <div
+                                    onClick={() => setWantsExtraInsurance(!wantsExtraInsurance)}
+                                    className={`p-5 rounded-[2rem] border-2 transition-all cursor-pointer flex items-center gap-3 ${
+                                        wantsExtraInsurance
+                                        ? 'border-indigo-500 bg-indigo-50 shadow-lg'
+                                        : 'border-gray-100 bg-white hover:border-indigo-100'
+                                    }`}
+                                >
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs transition-colors ${wantsExtraInsurance ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>
+                                        💎
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className={`text-[9px] font-black uppercase tracking-widest font-bold ${wantsExtraInsurance ? 'text-indigo-600' : 'text-gray-400'}`}>Pełna ochrona AC</p>
+                                        <p className="font-bold text-gray-800 text-xs">+{extraInsurancePrice} PLN <span className="text-[8px] font-normal italic">(zamiast Standard)</span></p>
+                                    </div>
+                                    {wantsExtraInsurance && <span className="text-indigo-500 font-bold text-xs">✓</span>}
                                 </div>
                             </div>
 

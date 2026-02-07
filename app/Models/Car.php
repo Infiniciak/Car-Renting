@@ -12,22 +12,10 @@ class Car extends Model
     use HasFactory;
 
     protected $fillable = [
-        'brand',
-        'model',
-        'year',
-        'registration_number',
-        'type',
-        'fuel_type',
-        'transmission',
-        'seats',
-        'price_per_day',
-        'insurance_per_day',
-        'status',
-        'image_path',
-        'description',
-        'has_gps',
-        'has_air_conditioning',
-        'discount_percentage',
+        'brand', 'model', 'year', 'registration_number', 'type',
+        'fuel_type', 'transmission', 'seats', 'price_per_day',
+        'insurance_per_day', 'status', 'image_path', 'description',
+        'has_gps', 'has_air_conditioning', 'discount_percentage',
         'rental_point_id',
     ];
 
@@ -39,38 +27,58 @@ class Car extends Model
         'has_air_conditioning' => 'boolean',
     ];
 
-    /**
-     * Punkt wypożyczenia gdzie jest samochód
-     */
+    protected $appends = ['extra_insurance_per_day'];
+
     public function rentalPoint(): BelongsTo
     {
         return $this->belongsTo(RentalPoint::class);
     }
 
-    /**
-     * Wypożyczenia tego samochodu
-     */
     public function rentals(): HasMany
     {
         return $this->hasMany(Rental::class);
     }
 
-    /**
-     * Sprawdź czy samochód jest dostępny
-     */
     public function isAvailable(): bool
     {
         return $this->status === 'available';
     }
 
-    /**
-     * Cena z rabatem
-     */
+    protected static function booted()
+    {
+        static::saving(function ($car) {
+            $car->insurance_per_day = round($car->price_per_day * 0.05, 2);
+        });
+    }
+
+    public function getExtraInsurancePerDayAttribute()
+    {
+        $basePrice = (float) $this->price_per_day;
+        if ($basePrice <= 0) return 0;
+
+        $multiplier = 1.0;
+
+        $typeMultipliers = [
+            'SUV' => 1.4, 'van' => 1.3, 'sedan' => 1.0,
+            'hatchback' => 0.9, 'coupe' => 1.8, 'electric' => 1.5
+        ];
+        $multiplier *= ($typeMultipliers[$this->type] ?? 1.0);
+
+        $premiumBrands = ['BMW', 'Mercedes', 'Audi', 'Tesla', 'Porsche'];
+        if (in_array($this->brand, $premiumBrands)) $multiplier *= 1.3;
+
+        $age = date('Y') - $this->year;
+        if ($age <= 2) $multiplier *= 1.25;
+
+        return round(($basePrice * 0.12) * $multiplier, 2);
+    }
+
+
     public function getPriceWithDiscount(): float
     {
         $price = (float) $this->price_per_day;
         $discount = (float) $this->discount_percentage;
-        
+
         return $price - ($price * ($discount / 100));
     }
 }

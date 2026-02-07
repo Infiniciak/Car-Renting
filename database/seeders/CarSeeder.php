@@ -10,7 +10,6 @@ class CarSeeder extends Seeder
 {
     public function run(): void
     {
-
         $pointIds = RentalPoint::pluck('id')->toArray();
 
         if (empty($pointIds)) {
@@ -43,46 +42,42 @@ class CarSeeder extends Seeder
             $brand = array_rand($brands);
             $model = $brands[$brand][array_rand($brands[$brand])];
 
-            // --- LOGIKA CECH POJAZDU ---
             $isVan = (str_contains($model, 'V-Class') || str_contains($model, 'Proace') || str_contains($model, 'Transporter') || str_contains($model, 'Transit'));
-            $isLargeSUV = (str_contains($model, 'X7') || str_contains($model, 'Q7') || str_contains($model, 'XC90') || str_contains($model, 'Explorer'));
-            $isElectric = (str_contains($brand, 'Tesla') || str_contains($model, 'ID.4') || str_contains($model, 'Ioniq 5') || str_contains($model, 'EV6'));
+            $isSUV = (str_contains($model, 'X') || str_contains($model, 'Q') || str_contains($model, 'Tucson') || str_contains($model, 'XC') || str_contains($model, 'RAV4') || str_contains($model, 'GLE') || str_contains($model, 'Tiguan') || str_contains($model, 'Kodiaq'));
+            $isCoupe = (str_contains($model, 'Mustang') || str_contains($model, 'M4'));
+            $isElectric = (str_contains($brand, 'Tesla') || str_contains($model, 'ID.4') || str_contains($model, 'Ioniq 5'));
 
-            // Liczba miejsc
             $seats = 5;
             if ($isVan) $seats = rand(7, 9);
-            elseif ($isLargeSUV) $seats = 7;
-            elseif (in_array($model, ['Yaris', 'Fabia', '500', 'A3'])) $seats = 4;
+            elseif (str_contains($model, 'X7') || str_contains($model, 'Q7') || str_contains($model, 'XC90')) $seats = 7;
+            elseif (in_array($model, ['Yaris', 'Fabia', 'A3', 'M4'])) $seats = 4;
 
-            // Typ nadwozia
             $type = 'sedan';
             if ($isVan) $type = 'van';
-            elseif (str_contains($model, 'X') || str_contains($model, 'Q') || str_contains($model, 'Tucson') || str_contains($model, 'XC') || str_contains($model, 'RAV4')) $type = 'SUV';
-            elseif ($isElectric) $type = 'electric';
-            elseif (in_array($model, ['Golf', 'Yaris', 'Focus', 'i30', 'Fabia'])) $type = 'hatchback';
-            elseif (str_contains($model, 'Mustang') || str_contains($model, 'M4')) $type = 'coupe';
+            elseif ($isSUV) $type = 'SUV';
+            elseif ($isCoupe) $type = 'coupe';
+            elseif (in_array($model, ['Golf', 'Yaris', 'Focus', 'i30', 'Fabia', 'A3'])) $type = 'hatchback';
 
-            // Cena (bardziej realistyczna)
-            $price = rand(150, 450);
-            if ($isVan || $isLargeSUV) $price = rand(450, 800);
-            if (str_contains($model, 'S-Class') || str_contains($model, 'M4') || str_contains($model, 'S90')) $price = rand(800, 1500);
+            $price = rand(150, 400);
+            if ($isSUV) $price = rand(350, 700);
+            if ($isVan) $price = rand(400, 800);
+            if ($isCoupe || str_contains($model, 'S-Class') || str_contains($model, 'Model S')) $price = rand(800, 1600);
 
             Car::create([
                 'brand' => $brand,
                 'model' => $model,
-                'year' => rand(2021, 2024),
+                'year' => rand(2021, 2025),
                 'registration_number' => strtoupper(substr($brand, 0, 2)) . rand(10000, 99999),
                 'type' => $type,
                 'fuel_type' => $isElectric ? 'electric' : $fuels[array_rand($fuels)],
-                'transmission' => (rand(0, 1) || $isElectric || $price > 400) ? 'automatic' : 'manual',
+                'transmission' => ($isElectric || $price > 450 || rand(0, 1)) ? 'automatic' : 'manual',
                 'seats' => $seats,
                 'price_per_day' => $price,
-                'insurance_per_day' => rand(30, 100),
                 'status' => 'available',
                 'has_gps' => (bool)rand(0, 1),
                 'has_air_conditioning' => true,
                 'rental_point_id' => $pointIds[array_rand($pointIds)],
-                'description' => "Wyjątkowy $brand $model ($type) z rocznika " . rand(2021, 2024) . ". Idealny stan techniczny, bogate wyposażenie. Zapraszamy do wynajmu!",
+                'description' => "Wyjątkowy $brand $model w wersji $type. Doskonały wybór dla osób ceniących " . ($price > 500 ? "luksus i prestiż." : "ekonomię i niezawodność."),
             ]);
         }
     }
