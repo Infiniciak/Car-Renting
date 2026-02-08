@@ -20,6 +20,7 @@ import CarWizard from '../pages/CarWizard.jsx';
 import RentalBooking from '../pages/RentalBooking.jsx';
 import UserRentals from '../pages/UserRentals.jsx';
 import AdminPromoCodes from '../pages/AdminPromoCodes.jsx';
+import NotFound from '../pages/NotFound.jsx';
 
 // --- FUNKCJA POMOCNICZA: SPRAWDZANIE CZY TOKEN JEST PRAWIDŁOWY ---
 const isValidToken = (token) => {
@@ -216,6 +217,9 @@ function App() {
 
                 {/* REDIRECT GŁÓWNY */}
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+                {/* 404 */}
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </Router>
     );
