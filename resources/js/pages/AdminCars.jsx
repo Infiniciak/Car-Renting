@@ -153,10 +153,10 @@ const AdminCars = () => {
         } catch (err) { alert("Błąd usuwania"); }
     };
 
-    if (loading) return <div className="min-h-screen bg-[#11111d] flex items-center justify-center text-white italic text-xl">Wczytywanie...</div>;
+    if (loading) return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-900 dark:text-white italic text-xl transition-colors duration-300">Wczytywanie...</div>;
 
     return (
-        <div className="min-h-screen bg-[#11111d] p-8 text-white font-sans">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 text-gray-900 dark:text-white font-sans transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
                 {/* NAGŁÓWEK I WYSZUKIWARKA */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
@@ -167,10 +167,11 @@ const AdminCars = () => {
                     <div className="flex gap-4">
                         <input
                             type="text" placeholder="Szukaj (marka, rejestracja)..."
-                            className="bg-[#1e1e2d] border border-white/10 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500 transition-all text-sm"
+                            // RESOLVED: Używam Twoich stylów (bg-white/dark:bg-gray-800) bo obsługują zmianę motywu
+                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500 text-gray-900 dark:text-white transition-all"
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <button onClick={handleOpenAddModal} className="bg-indigo-600 hover:bg-indigo-700 px-6 py-4 rounded-2xl font-black transition-all text-sm tracking-widest">
+                        <button onClick={handleOpenAddModal} className="bg-indigo-600 hover:bg-indigo-700 px-6 py-4 rounded-2xl font-black transition-all text-sm tracking-widest text-white">
                             + DODAJ AUTO
                         </button>
                     </div>
@@ -182,9 +183,10 @@ const AdminCars = () => {
                         c.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         c.registration_number.toLowerCase().includes(searchTerm.toLowerCase())
                     ).map(car => (
-                        <div key={car.id} className="bg-[#1e1e2d] p-8 rounded-[2.5rem] border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center transition-all hover:border-indigo-500/50 shadow-xl">
+                        <div key={car.id} className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-200 dark:border-gray-700 flex flex-col lg:flex-row justify-between items-start lg:items-center transition-all hover:border-indigo-500/50 shadow-xl">
                             <div className="flex flex-col md:flex-row gap-8 w-full">
-                                <div className="h-24 w-36 bg-black/40 rounded-2xl overflow-hidden flex items-center justify-center border border-white/5 flex-shrink-0 shadow-inner">
+                                {/* ZDJĘCIE W KAFELKU - Twoje style (light/dark mode) */}
+                                <div className="h-24 w-36 bg-gray-100 dark:bg-gray-700 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-200 dark:border-gray-600 flex-shrink-0 shadow-inner transition-colors duration-300">
                                     {car.image_path ? (
                                         <img src={STORAGE_URL + car.image_path} alt="car" className="w-full h-full object-cover" />
                                     ) : (
@@ -195,7 +197,8 @@ const AdminCars = () => {
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-4 flex-1">
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Marka i Model</p>
-                                        <h3 className="font-bold text-lg text-white leading-tight">{car.brand} {car.model}</h3>
+                                        {/* Dodano text-gray-900 dark:text-white dla czytelności w light mode */}
+                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white leading-tight">{car.brand} {car.model}</h3>
                                         <p className="text-[10px] text-indigo-400 font-bold uppercase">{car.type} • {car.fuel_type}</p>
                                     </div>
                                     <div>
@@ -213,7 +216,7 @@ const AdminCars = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Ubezpieczenie (Doba)</p>
-                                        <p className="text-xs font-bold text-gray-300">Standard: {car.insurance_per_day} PLN</p>
+                                        <p className="text-xs font-bold text-gray-400">Standard: {car.insurance_per_day} PLN</p>
                                         <p className="text-xs font-bold text-indigo-400">Premium AC: {car.extra_insurance_per_day} PLN</p>
                                     </div>
                                     <div>
@@ -224,7 +227,7 @@ const AdminCars = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Cena (Doba)</p>
-                                        <p className="font-black text-emerald-400 text-lg">{car.price_per_day} PLN</p>
+                                        <p className="font-black text-emerald-500 text-lg">{car.price_per_day} PLN</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Skrzynia / Rok</p>
@@ -233,15 +236,15 @@ const AdminCars = () => {
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Wyposażenie</p>
                                         <p className="text-[9px] font-bold text-gray-500 flex gap-2">
-                                            {car.has_air_conditioning && <span className="bg-white/5 px-1 rounded italic">KLIMA</span>}
-                                            {car.has_gps && <span className="bg-white/5 px-1 rounded italic">GPS</span>}
+                                            {car.has_air_conditioning && <span className="bg-gray-200 dark:bg-white/5 px-1 rounded italic">KLIMA</span>}
+                                            {car.has_gps && <span className="bg-gray-200 dark:bg-white/5 px-1 rounded italic">GPS</span>}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="flex lg:flex-col gap-2 mt-6 lg:mt-0 w-full lg:w-auto">
-                                <button onClick={() => handleOpenEditModal(car)} className="flex-1 px-8 py-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors font-bold text-xs uppercase">Edytuj</button>
+                                <button onClick={() => handleOpenEditModal(car)} className="flex-1 px-8 py-3 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white rounded-2xl transition-colors font-bold text-xs uppercase">Edytuj</button>
                                 <button onClick={() => handleDelete(car.id)} className="flex-1 px-8 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl transition-colors font-bold text-xs uppercase">Usuń</button>
                             </div>
                         </div>
@@ -251,25 +254,27 @@ const AdminCars = () => {
 
             {/* MODAL */}
             {isModalOpen && (
+                // RESOLVED: Styl tła Twój (light/dark), ale dodałem overflow-y-auto i my-auto z Main, żeby na małych ekranach dało się przewijać
                 <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
-                    <div className="bg-[#1e1e2d] p-10 rounded-[3rem] border border-white/10 max-w-2xl w-full shadow-2xl my-auto">
+                    <div className="bg-white dark:bg-gray-800 p-10 rounded-[3rem] border border-gray-200 dark:border-gray-700 max-w-2xl w-full shadow-2xl my-auto transition-colors duration-300">
                         <h2 className="text-3xl font-black mb-8 uppercase text-indigo-400 tracking-tighter">Specyfikacja Pojazdu</h2>
                         <form onSubmit={handleSubmit} className="space-y-5 text-sm">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Marka</label>
-                                    <input className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} required />
+                                    <input className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-colors duration-200" value={formData.brand} onChange={e => setFormData({ ...formData, brand: e.target.value })} required />
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Model</label>
-                                    <input className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} required />
+                                    <input className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-colors duration-200" value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })} required />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
+                                {/* RESOLVED: Zmieniłem kolory inputów na Twoje (bg-gray-50 dark:bg-gray-700), ale zachowałem strukturę selectów */}
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Typ Nadwozia</label>
-                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white focus:ring-2 focus:ring-indigo-500" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                                    <select className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
                                         <option value="sedan">Sedan</option>
                                         <option value="SUV">SUV</option>
                                         <option value="hatchback">Hatchback</option>
@@ -280,7 +285,7 @@ const AdminCars = () => {
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Paliwo</label>
-                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.fuel_type} onChange={e => setFormData({...formData, fuel_type: e.target.value})}>
+                                    <select className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" value={formData.fuel_type} onChange={e => setFormData({ ...formData, fuel_type: e.target.value })}>
                                         <option value="petrol">Benzyna</option>
                                         <option value="diesel">Diesel</option>
                                         <option value="electric">Prąd</option>
@@ -289,31 +294,35 @@ const AdminCars = () => {
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Skrzynia</label>
-                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.transmission} onChange={e => setFormData({...formData, transmission: e.target.value})}>
+                                    <select className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" value={formData.transmission} onChange={e => setFormData({ ...formData, transmission: e.target.value })}>
                                         <option value="manual">Manualna</option>
                                         <option value="automatic">Automat</option>
                                     </select>
                                 </div>
                             </div>
 
+                            {/* RESOLVED: Tutaj Main dodał grupowanie (flex) dla Roku i Miejsc oraz pola Ceny.
+                                Zachowałem ten układ (funkcjonalność), ale nałożyłem Twoje style (wygląd). */}
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rejestracja</label>
-                                    <input className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.registration_number} onChange={e => setFormData({...formData, registration_number: e.target.value})} required />
+                                    <input className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white transition-colors duration-200" value={formData.registration_number} onChange={e => setFormData({ ...formData, registration_number: e.target.value })} required />
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Rok / Miejsca</label>
                                     <div className="flex gap-2">
-                                        <input type="number" className="w-1/2 bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} />
-                                        <input type="number" className="w-1/2 bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.seats} onChange={e => setFormData({...formData, seats: e.target.value})} />
+                                        <input type="number" className="w-1/2 bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} />
+                                        <input type="number" className="w-1/2 bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" value={formData.seats} onChange={e => setFormData({ ...formData, seats: e.target.value })} />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500 ml-2 text-emerald-400">Cena / Doba</label>
-                                    <input type="number" className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-emerald-400 font-black" value={formData.price_per_day} onChange={e => setFormData({...formData, price_per_day: e.target.value})} required />
+                                    <label className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 ml-2">Cena / Doba</label>
+                                    <input type="number" className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-emerald-600 dark:text-emerald-400 font-black" value={formData.price_per_day} onChange={e => setFormData({ ...formData, price_per_day: e.target.value })} required />
                                 </div>
                             </div>
 
+                            {/* RESOLVED: To są nowe funkcje z Main (kalkulator OC i AC). MUSIMY to zostawić.
+                                Zmieniłem tylko kolory tła (bg-emerald-500/5) na bardziej pasujące, ale logikę zostawiłem 1:1. */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
                                     <label className="text-[10px] uppercase font-bold text-emerald-500 block mb-1">Ubezpieczenie Standard (OC)</label>
@@ -334,14 +343,16 @@ const AdminCars = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Punkt Odbioru</label>
-                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-blue-400 font-bold" value={formData.rental_point_id || ''} onChange={e => setFormData({...formData, rental_point_id: e.target.value})}>
+                                    {/* Styl Twój (light/dark) */}
+                                    <select className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-blue-400 font-bold" value={formData.rental_point_id || ''} onChange={e => setFormData({ ...formData, rental_point_id: e.target.value })}>
                                         <option value="">Brak (Magazyn)</option>
                                         {points.map(p => <option key={p.id} value={p.id}>{p.city} - {p.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
+                                    {/* Main zamienił tu pole Ceny na pole Statusu. Zostawiamy Status w tym miejscu (bo Cena poszła wyżej), ale dajemy Twoje style. */}
                                     <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Status</label>
-                                    <select className="w-full bg-[#11111d] p-4 rounded-2xl border-none text-white" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                                    <select className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                                         <option value="available">Dostępny</option>
                                         <option value="rented">Wynajęty</option>
                                         <option value="service">Serwis</option>
@@ -349,34 +360,40 @@ const AdminCars = () => {
                                 </div>
                             </div>
 
-                            <div className="flex gap-8 p-5 bg-[#11111d] rounded-2xl justify-center">
+                            {/* Checkboxy - Twój styl tła */}
+                            <div className="flex gap-8 p-6 bg-gray-50 dark:bg-gray-700 rounded-3xl justify-center transition-colors duration-300">
                                 <label className="flex items-center gap-3 cursor-pointer group">
-                                    <input type="checkbox" className="w-5 h-5 accent-indigo-600 rounded" checked={formData.has_gps} onChange={e => setFormData({...formData, has_gps: e.target.checked})} />
-                                    <span className="text-xs font-black uppercase tracking-widest group-hover:text-indigo-400 transition">GPS</span>
+                                    <input type="checkbox" className="w-5 h-5 accent-indigo-600 rounded" checked={formData.has_gps} onChange={e => setFormData({ ...formData, has_gps: e.target.checked })} />
+                                    <span className="text-xs font-black uppercase tracking-widest text-gray-500 group-hover:text-indigo-400 transition">GPS</span>
                                 </label>
                                 <label className="flex items-center gap-3 cursor-pointer group">
-                                    <input type="checkbox" className="w-5 h-5 accent-indigo-600 rounded" checked={formData.has_air_conditioning} onChange={e => setFormData({...formData, has_air_conditioning: e.target.checked})} />
-                                    <span className="text-xs font-black uppercase tracking-widest group-hover:text-indigo-400 transition">KLIMATYZACJA</span>
+                                    <input type="checkbox" className="w-5 h-5 accent-indigo-600 rounded" checked={formData.has_air_conditioning} onChange={e => setFormData({ ...formData, has_air_conditioning: e.target.checked })} />
+                                    <span className="text-xs font-black uppercase tracking-widest text-gray-500 group-hover:text-indigo-400 transition">KLIMATYZACJA</span>
                                 </label>
                             </div>
 
                             <div className="space-y-4">
                                 <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Zdjęcie pojazdu</label>
-                                <div className="relative h-40 w-full bg-black/40 rounded-3xl overflow-hidden border border-white/5 flex items-center justify-center">
+                                {/* Kontener podglądu - Twoje style */}
+                                <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-700 rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-600 flex items-center justify-center transition-colors duration-300">
                                     {imagePreview ? (
                                         <>
                                             <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                                            <button type="button" onClick={handleRemoveImage} className="absolute top-3 right-3 bg-red-600 px-3 py-1 rounded-lg text-[9px] font-black tracking-tighter">USUŃ</button>
+                                            <button type="button" onClick={handleRemoveImage} className="absolute top-3 right-3 bg-red-600 px-3 py-1 rounded-lg text-white text-[9px] font-black tracking-tighter">USUŃ</button>
                                         </>
-                                    ) : <span className="text-gray-600 italic text-xs">Wybierz plik graficzny...</span>}
+                                    ) : <span className="text-gray-400 italic text-xs">Wybierz plik graficzny...</span>}
                                 </div>
+                                {/* RESOLVED: Main wprowadził lepszy przycisk "Zmień plik" (hidden input + label).
+                                    Zostawiamy to rozwiązanie, bo jest ładniejsze niż standardowy input, ale zmieniamy kolory na Twoje (light/dark). */}
                                 <input type="file" accept="image/*" className="hidden" id="car-img" onChange={handleImageChange} />
-                                <label htmlFor="car-img" className="block text-center p-3 bg-white/5 rounded-2xl border border-dashed border-white/10 cursor-pointer hover:bg-white/10 transition text-xs font-bold uppercase tracking-widest">Zmień plik</label>
+                                <label htmlFor="car-img" className="block text-center p-3 bg-gray-50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-300 dark:border-white/10 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10 transition text-gray-500 dark:text-white text-xs font-bold uppercase tracking-widest">
+                                    Zmień plik
+                                </label>
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 py-4 rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all">Zapisz Pojazd</button>
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-[2rem] font-bold uppercase text-xs tracking-widest">Anuluj</button>
+                                <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 py-4 rounded-[2rem] text-white font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all">Zapisz Pojazd</button>
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-white py-4 rounded-[2rem] font-bold uppercase text-xs tracking-widest">Anuluj</button>
                             </div>
                         </form>
                     </div>

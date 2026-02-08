@@ -1,10 +1,88 @@
 @import "tailwindcss";
-
-
-@source "../../resources/**/*.blade.php";
-@source "../../resources/**/*.jsx";
+@config "../../tailwind.config.js";
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+    :root {
+        color-scheme: light dark;
+    }
+
+    html {
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+        min-height: 100vh;
+        font-family: var(--font-sans);
+        line-height: 1.5;
+        @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+    }
+
+    #app {
+        min-height: 100vh;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+        font-family: inherit;
+    }
+
+    ::selection {
+        @apply bg-indigo-200 text-slate-900 dark:bg-indigo-500/40 dark:text-white;
+    }
+}
+
+@layer components {
+    .profile-card {
+        @apply rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/70 shadow-2xl backdrop-blur;
+    }
+}
+
+/* Light/Dark mode base */
+html {
+    background-color: #f9fafb;
+    color: #111827;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+html.dark {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+/* Light theme mapping for hard-coded dark surfaces */
+html.light .bg-\[\#0f0f17\],
+html.light .bg-\[\#0a0a14\] {
+    background-color: #f8fafc;
+    color: #0f172a;
+    border-color: #e2e8f0;
+}
+
+html.light .bg-\[\#11111d\] {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    border-color: #e2e8f0;
+}
+
+html.light .bg-\[\#1e1e2d\] {
+    background-color: #ffffff;
+    color: #0f172a;
+    border-color: #e2e8f0;
+}
+
+html.light .bg-white\/5,
+html.light .bg-white\/10 {
+    background-color: #e2e8f0;
+}
+
+html.light .border-white\/5,
+html.light .border-white\/10 {
+    border-color: #e2e8f0;
 }

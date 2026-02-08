@@ -70,18 +70,18 @@ const UserManagement = () => {
     );
 
     return (
-        <div className="min-h-screen bg-[#11111d] p-8 text-white">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 text-gray-900 dark:text-white transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
                 {/* Header z przyciskiem DODAJ */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter uppercase">Zarządzanie Kadrami</h1>
-                        <p className="text-indigo-400 font-medium">Panel administracyjny pracowników</p>
+                        <h1 className="text-4xl font-black tracking-tighter uppercase text-gray-900 dark:text-white">Zarządzanie Kadrami</h1>
+                        <p className="text-indigo-600 dark:text-indigo-400 font-medium">Panel administracyjny pracowników</p>
                     </div>
                     <div className="flex gap-4">
                         <input 
                             type="text" placeholder="Szukaj..." 
-                            className="bg-[#1e1e2d] border border-white/10 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500"
+                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-4 rounded-2xl w-64 outline-none focus:border-indigo-500 text-gray-900 dark:text-white transition-colors duration-200"
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                         <button 
@@ -96,15 +96,15 @@ const UserManagement = () => {
                 {/* Lista Użytkowników */}
                 <div className="grid grid-cols-1 gap-4">
                     {filteredUsers.map(user => (
-                        <div key={user.id} className="bg-[#1e1e2d] p-6 rounded-[2rem] border border-white/5 flex justify-between items-center">
+                        <div key={user.id} className="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-200 dark:border-gray-700 flex justify-between items-center transition-colors duration-300">
                             <div className="flex items-center gap-6">
                                 <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-bold bg-indigo-500/10 text-indigo-400`}>
                                     {user.name.charAt(0)}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold">{user.name}</h3>
+                                    <h3 className="font-bold text-gray-900 dark:text-white">{user.name}</h3>
                                     <div className="flex gap-2 mt-1">
-                                        <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 uppercase font-bold">{user.role}</span>
+                                        <span className="text-[10px] bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-gray-700 dark:text-gray-400 uppercase font-bold">{user.role}</span>
                                         {user.rental_point && (
                                             <span className="text-[10px] bg-emerald-500/10 px-2 py-1 rounded text-emerald-400 uppercase font-bold">
                                                 {user.rental_point.city}
@@ -125,20 +125,20 @@ const UserManagement = () => {
             {/* MODAL: DODAWANIE (isAdding) LUB EDYCJA (editingUser) */}
             {(isAdding || editingUser) && (
                 <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
-                    <div className="bg-[#1e1e2d] p-10 rounded-[3rem] border border-white/10 max-w-lg w-full">
-                        <h2 className="text-2xl font-black mb-6 uppercase">
+                    <div className="bg-white dark:bg-gray-800 p-10 rounded-[3rem] border border-gray-200 dark:border-gray-700 max-w-lg w-full transition-colors duration-300">
+                        <h2 className="text-2xl font-black mb-6 uppercase text-gray-900 dark:text-white">
                             {isAdding ? "Nowy Użytkownik" : "Edycja Uprawnień"}
                         </h2>
                         <form onSubmit={isAdding ? handleCreate : handleUpdate} className="space-y-4">
                             <input 
-                                className="w-full bg-[#11111d] p-4 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-colors duration-200"
                                 placeholder="Imię i Nazwisko"
                                 value={isAdding ? newUser.name : editingUser.name}
                                 onChange={e => isAdding ? setNewUser({...newUser, name: e.target.value}) : setEditingUser({...editingUser, name: e.target.value})}
                                 required
                             />
                             <input 
-                                className="w-full bg-[#11111d] p-4 rounded-2xl border-none"
+                                className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white transition-colors duration-200"
                                 placeholder="Email"
                                 type="email"
                                 value={isAdding ? newUser.email : editingUser.email}
@@ -147,7 +147,7 @@ const UserManagement = () => {
                             />
                             {isAdding && (
                                 <input 
-                                    className="w-full bg-[#11111d] p-4 rounded-2xl border-none"
+                                    className="w-full bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white transition-colors duration-200"
                                     placeholder="Hasło"
                                     type="password"
                                     onChange={e => setNewUser({...newUser, password: e.target.value})}
@@ -156,7 +156,7 @@ const UserManagement = () => {
                             )}
                             <div className="grid grid-cols-2 gap-4">
                                 <select 
-                                    className="bg-[#11111d] p-4 rounded-2xl border-none text-indigo-400 font-bold"
+                                    className="bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-indigo-600 dark:text-indigo-400 font-bold transition-colors duration-200"
                                     value={isAdding ? newUser.role : editingUser.role}
                                     onChange={e => isAdding ? setNewUser({...newUser, role: e.target.value}) : setEditingUser({...editingUser, role: e.target.value})}
                                 >
@@ -165,7 +165,7 @@ const UserManagement = () => {
                                     <option value="admin">Admin</option>
                                 </select>
                                 <select 
-                                    className="bg-[#11111d] p-4 rounded-2xl border-none"
+                                    className="bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white transition-colors duration-200"
                                     value={isAdding ? newUser.rental_point_id : (editingUser.rental_point_id || '')}
                                     onChange={e => isAdding ? setNewUser({...newUser, rental_point_id: e.target.value}) : setEditingUser({...editingUser, rental_point_id: e.target.value})}
                                 >
@@ -177,7 +177,7 @@ const UserManagement = () => {
                                 <button type="submit" className="flex-1 bg-indigo-600 py-4 rounded-2xl font-black uppercase">
                                     {isAdding ? "Stwórz" : "Zapisz"}
                                 </button>
-                                <button type="button" onClick={() => {setIsAdding(false); setEditingUser(null)}} className="flex-1 bg-white/5 py-4 rounded-2xl font-bold">ANULUJ</button>
+                                <button type="button" onClick={() => {setIsAdding(false); setEditingUser(null)}} className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-4 rounded-2xl font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">ANULUJ</button>
                             </div>
                         </form>
                     </div>

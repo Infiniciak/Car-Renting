@@ -165,25 +165,25 @@ const AdminRentalPoints = () => {
     const isGeocodeDisabled = !formData.city?.trim() || !formData.address?.trim();
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8 font-sans">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 text-gray-900 dark:text-white font-sans transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-black text-gray-800">Punkty Wypożyczeń</h1>
-                    <button onClick={() => navigate('/admin')} className="text-indigo-600 font-bold">Wróć</button>
+                    <h1 className="text-3xl font-black text-gray-800 dark:text-white">Punkty Wypożyczeń</h1>
+                    <button onClick={() => navigate('/admin')} className="text-indigo-600 dark:text-indigo-300 font-bold">Wróć</button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
-                        <h2 className="text-xl font-bold mb-6 text-gray-800">{editingId ? 'Edytuj' : 'Dodaj'}</h2>
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-fit">
+                        <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">{editingId ? 'Edytuj' : 'Dodaj'}</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <input type="text" placeholder="Nazwa" className="w-full p-3 bg-gray-50 rounded-xl border" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                            <input type="text" placeholder="Miasto" className="w-full p-3 bg-gray-50 rounded-xl border" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} required />
-                            <input type="text" placeholder="Adres" className="w-full p-3 bg-gray-50 rounded-xl border" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} required />
-                            <input type="text" placeholder="Kod pocztowy" className="w-full p-3 bg-gray-50 rounded-xl border" value={formData.postal_code} onChange={e => setFormData({...formData, postal_code: e.target.value})} required />
+                            <input type="text" placeholder="Nazwa" className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                            <input type="text" placeholder="Miasto" className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} required />
+                            <input type="text" placeholder="Adres" className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} required />
+                            <input type="text" placeholder="Kod pocztowy" className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white" value={formData.postal_code} onChange={e => setFormData({...formData, postal_code: e.target.value})} required />
 
-                            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                            <div className="p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl border border-indigo-100 dark:border-indigo-800/60">
                                 <div className="flex justify-between items-center mb-3">
-                                    <label className="text-xs font-bold text-indigo-800 uppercase">Lokalizacja na mapie</label>
+                                    <label className="text-xs font-bold text-indigo-800 dark:text-indigo-200 uppercase">Lokalizacja na mapie</label>
 
                                     <button
                                         type="button"
@@ -205,7 +205,7 @@ const AdminRentalPoints = () => {
                                             type="number"
                                             step="any"
                                             placeholder="Szerokość (Lat)"
-                                            className="w-full p-2 bg-white rounded border border-indigo-200 text-sm"
+                                            className="w-full p-2 bg-white dark:bg-gray-900 rounded border border-indigo-200 dark:border-indigo-700 text-sm text-gray-900 dark:text-white"
                                             value={formData.latitude}
                                             onChange={e => setFormData({...formData, latitude: e.target.value})}
                                         />
@@ -215,7 +215,7 @@ const AdminRentalPoints = () => {
                                             type="number"
                                             step="any"
                                             placeholder="Długość (Lng)"
-                                            className="w-full p-2 bg-white rounded border border-indigo-200 text-sm"
+                                            className="w-full p-2 bg-white dark:bg-gray-900 rounded border border-indigo-200 dark:border-indigo-700 text-sm text-gray-900 dark:text-white"
                                             value={formData.longitude}
                                             onChange={e => setFormData({...formData, longitude: e.target.value})}
                                         />
@@ -224,7 +224,7 @@ const AdminRentalPoints = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Zdjęcie punktu</label>
+                                <label className="block text-xs font-bold text-gray-400 dark:text-gray-300 uppercase mb-1">Zdjęcie punktu</label>
 
                                 <div className="relative">
                                 <input
@@ -236,7 +236,7 @@ const AdminRentalPoints = () => {
                                 />
                                 <label
                                     htmlFor="fileInput"
-                                    className="flex items-center justify-center w-full p-3 bg-gray-50 rounded-xl border border-gray-200 text-gray-500 cursor-pointer hover:bg-gray-100 hover:border-indigo-300 transition border-dashed border-2"
+                                    className="flex items-center justify-center w-full p-3 bg-gray-50 dark:bg-gray-900/60 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:border-indigo-300 transition border-dashed border-2"
                                 >
                                     <span className="flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -259,20 +259,20 @@ const AdminRentalPoints = () => {
                                     onChange={e => setFormData({...formData, has_charging_station: e.target.checked})}
                                     className="w-5 h-5"
                                 />
-                                <label className="font-bold text-gray-700">Stacja ładowania ⚡</label>
+                                <label className="font-bold text-gray-700 dark:text-gray-200">Stacja ładowania ⚡</label>
                             </div>
 
                             <div className="flex gap-2">
                                 <button type="submit" className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700">Zapisz</button>
-                                {editingId && <button type="button" onClick={resetForm} className="px-4 bg-gray-200 rounded-xl font-bold">Anuluj</button>}
+                                {editingId && <button type="button" onClick={resetForm} className="px-4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-bold">Anuluj</button>}
                             </div>
                         </form>
                     </div>
 
                     <div className="lg:col-span-2 space-y-4">
                         {points.map(point => (
-                            <div key={point.id} className="bg-white p-6 rounded-2xl shadow-sm border flex gap-4 items-start">
-                                <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                            <div key={point.id} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex gap-4 items-start">
+                                <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
                                     {point.image_path ? (
                                         <img
                                             src={STORAGE_URL + point.image_path}
@@ -280,7 +280,7 @@ const AdminRentalPoints = () => {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center p-1">
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-300 text-xs text-center p-1">
                                             Brak zdjęcia
                                         </div>
                                     )}
@@ -289,15 +289,15 @@ const AdminRentalPoints = () => {
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                            <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
                                                 {point.name}
                                                 {point.has_charging_station && <span className="text-yellow-500" title="Ma ładowarkę">⚡</span>}
                                             </h3>
-                                            <p className="text-gray-500">{point.address}, {point.city}, {point.postal_code}</p>
+                                            <p className="text-gray-500 dark:text-gray-300">{point.address}, {point.city}, {point.postal_code}</p>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => startEdit(point)} className="text-indigo-600 font-bold px-3 py-1 bg-indigo-50 rounded text-sm">Edytuj</button>
-                                            <button onClick={() => handleDelete(point.id)} className="text-red-600 font-bold px-3 py-1 bg-red-50 rounded text-sm">Usuń</button>
+                                            <button onClick={() => startEdit(point)} className="text-indigo-600 dark:text-indigo-300 font-bold px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 rounded text-sm">Edytuj</button>
+                                            <button onClick={() => handleDelete(point.id)} className="text-red-600 dark:text-red-300 font-bold px-3 py-1 bg-red-50 dark:bg-red-950/40 rounded text-sm">Usuń</button>
                                         </div>
                                     </div>
                                 </div>
