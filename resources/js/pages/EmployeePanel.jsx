@@ -85,6 +85,26 @@ const EmployeePanel = () => {
 
     const handleAddCar = async (e) => {
         e.preventDefault();
+
+        if (formData.brand.trim().length < 2) {
+        return alert("Marka musi mieć co najmniej 2 znaki.");
+        }
+        if (formData.model.trim().length < 1) {
+            return alert("Model nie może być pusty.");
+        }
+        if (!/^[A-Z0-9 ]+$/.test(formData.registration_number)) {
+            return alert("Numer rejestracyjny może zawierać tylko wielkie litery i cyfry.");
+        }
+        if (parseFloat(formData.price_per_day) <= 0) {
+            return alert("Cena za dobę musi być większa od 0.");
+        }
+        if (parseInt(formData.year) < 1900 || parseInt(formData.year) > 2026) {
+            return alert("Podaj poprawny rok produkcji (1900-2026).");
+        }
+        if (!imageFile) {
+            return alert("Proszę dodać zdjęcie pojazdu.");
+        }
+
         const data = new FormData();
 
         const finalData = {
