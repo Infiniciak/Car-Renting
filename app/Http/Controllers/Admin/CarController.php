@@ -28,14 +28,18 @@ class CarController extends Controller
             'transmission' => 'required|string',
             'seats' => 'required|integer|min:1|max:9',
             'price_per_day' => 'required|numeric|min:1',
-            // insurance_per_day usuwamy z walidacji - model sam to wyliczy
             'status' => 'required|string',
             'rental_point_id' => 'nullable|exists:rental_points,id',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
-            'has_gps' => 'required|boolean',
-            'has_air_conditioning' => 'required|boolean',
+            // POPRAWKA: Zmiana walidacji boolean dla multipart/form-data
+            'has_gps' => 'required|in:0,1,true,false',
+            'has_air_conditioning' => 'required|in:0,1,true,false',
         ]);
+
+        // KONWERSJA stringów na prawdziwe boolean
+        $data['has_gps'] = filter_var($data['has_gps'], FILTER_VALIDATE_BOOLEAN);
+        $data['has_air_conditioning'] = filter_var($data['has_air_conditioning'], FILTER_VALIDATE_BOOLEAN);
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('cars', 'public');
@@ -64,10 +68,15 @@ class CarController extends Controller
             'price_per_day' => 'required|numeric|min:1',
             'status' => 'required|string',
             'rental_point_id' => 'nullable|exists:rental_points,id',
-            'has_gps' => 'required|boolean',
-            'has_air_conditioning' => 'required|boolean',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            // POPRAWKA: Zmiana walidacji boolean dla multipart/form-data
+            'has_gps' => 'required|in:0,1,true,false',
+            'has_air_conditioning' => 'required|in:0,1,true,false',
         ]);
+
+        // KONWERSJA stringów na prawdziwe boolean
+        $data['has_gps'] = filter_var($data['has_gps'], FILTER_VALIDATE_BOOLEAN);
+        $data['has_air_conditioning'] = filter_var($data['has_air_conditioning'], FILTER_VALIDATE_BOOLEAN);
 
         if ($request->input('remove_image') == '1') {
             if ($car->image_path) {

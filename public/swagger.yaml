@@ -1,0 +1,945 @@
+openapi: 3.0.0
+info:
+  title: API Systemu Wypożyczalni Samochodów
+  version: 1.0.0
+  description: Dokumentacja zintegrowana z lokalnym serwerem na porcie 8000.
+
+servers:
+  - url: http://localhost:8000/api
+    description: Główny punkt wejścia API
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Car:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        brand:
+          type: string
+          example: "BMW"
+        model:
+          type: string
+          example: "X5"
+        year:
+          type: integer
+          example: 2023
+        registration_number:
+          type: string
+          example: "WA12345"
+        type:
+          type: string
+          enum: [sedan, SUV, hatchback, van, coupe, electric]
+          example: "SUV"
+        fuel_type:
+          type: string
+          enum: [petrol, diesel, electric, hybrid]
+          example: "diesel"
+        transmission:
+          type: string
+          enum: [manual, automatic]
+          example: "automatic"
+        seats:
+          type: integer
+          example: 5
+        price_per_day:
+          type: number
+          format: float
+          example: 560.00
+        insurance_per_day:
+          type: number
+          format: float
+          example: 28.00
+        extra_insurance_per_day:
+          type: number
+          format: float
+          example: 94.08
+        status:
+          type: string
+          enum: [available, rented, maintenance]
+          example: "available"
+        has_gps:
+          type: boolean
+          example: true
+        has_air_conditioning:
+          type: boolean
+          example: true
+        description:
+          type: string
+          example: "Luksusowy SUV z pełnym wyposażeniem"
+        image_path:
+          type: string
+          nullable: true
+          example: "cars/example.jpg"
+        discount_percentage:
+          type: number
+          format: float
+          example: 0.00
+        rental_point_id:
+          type: integer
+          nullable: true
+          example: 1
+        rental_point:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            city:
+              type: string
+            address:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PaginatedCars:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Car'
+        first_page_url:
+          type: string
+          example: "http://localhost:8000/api/cars?page=1"
+        from:
+          type: integer
+          example: 1
+        last_page:
+          type: integer
+          example: 5
+        last_page_url:
+          type: string
+          example: "http://localhost:8000/api/cars?page=5"
+        links:
+          type: array
+          items:
+            type: object
+        next_page_url:
+          type: string
+          nullable: true
+          example: "http://localhost:8000/api/cars?page=2"
+        path:
+          type: string
+          example: "http://localhost:8000/api/cars"
+        per_page:
+          type: integer
+          example: 9
+        prev_page_url:
+          type: string
+          nullable: true
+        to:
+          type: integer
+          example: 9
+        total:
+          type: integer
+          example: 42
+
+    CarStats:
+      type: object
+      properties:
+        by_type:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              total:
+                type: integer
+        avg_prices:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              avg_price:
+                type: number
+        fuel_stats:
+          type: array
+          items:
+            type: object
+            properties:
+              fuel_type:
+                type: string
+              total:
+                type: integer
+        city_stats:
+          type: array
+          items:
+            type: object
+            properties:
+              city:
+                type: string
+              total:
+                type: integer
+        general:
+          type: object
+          properties:
+            total_cars:
+              type: integer
+            available_cars:
+              type: integer
+            total_value:
+              type: number
+            avg_year:
+              type: number
+
+    RevenueStats:
+      type: object
+      properties:
+        total_revenue:
+          type: number
+          example: 15680.50
+        net_revenue:
+          type: number
+          example: 14200.00
+        total_refunds:
+          type: number
+          example: 1480.50
+        active_rentals_value:
+          type: number
+          example: 3200.00
+        reserved_rentals_value:
+          type: number
+          example: 1500.00
+        avg_rental_value:
+          type: number
+          example: 650.50
+        total_rentals:
+          type: integer
+          example: 45
+        completed_rentals:
+          type: integer
+          example: 30
+        active_rentals:
+          type: integer
+          example: 10
+        cancelled_rentals:
+          type: integer
+          example: 5
+
+    MonthlyRevenue:
+      type: object
+      properties:
+        month:
+          type: string
+          example: "Sty 2026"
+        revenue:
+          type: number
+          example: 2500.00
+        rentals_count:
+          type: integer
+          example: 8
+
+    PointRevenue:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Centrum Warszawa"
+        city:
+          type: string
+          example: "Warszawa"
+        revenue:
+          type: number
+          example: 8500.00
+        rentals_count:
+          type: integer
+          example: 25
+
+    TopUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 15
+        name:
+          type: string
+          example: "Jan Kowalski"
+        email:
+          type: string
+          example: "jan.kowalski@example.com"
+        total_spent:
+          type: number
+          example: 5600.00
+        rentals_count:
+          type: integer
+          example: 12
+
+    DiscountStats:
+      type: object
+      properties:
+        total_discounts_given:
+          type: number
+          example: 1250.00
+        rentals_with_discount:
+          type: integer
+          example: 18
+        avg_discount:
+          type: number
+          example: 69.44
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+
+# Domyślnie wszystkie endpointy wymagają autentykacji
+security:
+  - bearerAuth: []
+
+paths:
+  # ===================================
+  # AUTENTYKACJA
+  # ===================================
+  /login:
+    post:
+      tags: [Auth]
+      summary: Logowanie i pobranie tokena
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: "admin@test.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        '200':
+          description: Pomyślne logowanie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  role:
+                    type: string
+                  user:
+                    type: object
+        '401':
+          description: Błędne dane logowania
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ===================================
+  # PUBLICZNE - SAMOCHODY
+  # ===================================
+  /cars:
+    get:
+      tags: [Public Cars]
+      summary: Lista dostępnych samochodów (publiczny endpoint)
+      description: |
+        Pobiera listę dostępnych samochodów z możliwością filtrowania i paginacją.
+        Endpoint publiczny - nie wymaga autoryzacji.
+        Zwraca tylko samochody o statusie 'available'.
+        Każdy samochód zawiera wyliczone stawki ubezpieczeń (insurance_per_day i extra_insurance_per_day).
+      security: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Wyszukiwanie po marce lub modelu (case-insensitive)
+          example: "BMW"
+
+        - name: max_price
+          in: query
+          required: false
+          schema:
+            type: number
+            format: float
+          description: Maksymalna cena za dzień
+          example: 600
+
+        - name: fuel_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [petrol, diesel, electric, hybrid]
+          description: Rodzaj paliwa
+          example: "diesel"
+
+        - name: rental_point_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: ID punktu wypożyczalni
+          example: 1
+
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [sedan, SUV, hatchback, van, coupe, electric]
+          description: Typ nadwozia
+          example: "SUV"
+
+        - name: transmission
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [manual, automatic]
+          description: Typ skrzyni biegów
+          example: "automatic"
+
+        - name: seats
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9
+          description: Minimalna liczba miejsc
+          example: 5
+
+        - name: has_gps
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Czy musi mieć GPS
+          example: true
+
+        - name: has_air_conditioning
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Czy musi mieć klimatyzację
+          example: true
+
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Numer strony (domyślnie 1, po 9 wyników na stronę)
+          example: 1
+
+      responses:
+        '200':
+          description: Lista dostępnych samochodów z paginacją
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCars'
+        '500':
+          description: Błąd serwera
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error"
+
+  /cars/{id}:
+    get:
+      tags: [Public Cars]
+      summary: Szczegóły samochodu (publiczny endpoint)
+      description: |
+        Pobiera szczegółowe informacje o konkretnym samochodzie wraz z danymi punktu wypożyczalni
+        i wyliczonymi stawkami ubezpieczeń.
+        Endpoint publiczny - nie wymaga autoryzacji.
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID samochodu
+          example: 1
+      responses:
+        '200':
+          description: Szczegóły samochodu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Samochód nie znaleziony
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No query results for model [App\\Models\\Car] 999"
+
+  # ===================================
+  # ADMIN - SAMOCHODY
+  # ===================================
+  /admin/cars:
+    get:
+      tags: [Admin Cars]
+      summary: Lista wszystkich samochodów (admin)
+      description: Pobiera listę WSZYSTKICH samochodów (również niedostępnych) z relacją punktu wypożyczalni
+      responses:
+        '200':
+          description: Lista samochodów
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Car'
+        '401':
+          description: Brak autoryzacji
+
+    post:
+      tags: [Admin Cars]
+      summary: Dodaj nowe auto
+      description: Tworzy nowy samochód. Ubezpieczenia są automatycznie wyliczane przez model.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - brand
+                - model
+                - year
+                - registration_number
+                - type
+                - fuel_type
+                - transmission
+                - seats
+                - price_per_day
+                - status
+                - has_gps
+                - has_air_conditioning
+                - rental_point_id
+              properties:
+                brand:
+                  type: string
+                  example: "BMW"
+                  description: Marka samochodu
+                model:
+                  type: string
+                  example: "X5"
+                  description: Model samochodu
+                year:
+                  type: integer
+                  minimum: 1900
+                  example: 2023
+                  description: Rok produkcji
+                registration_number:
+                  type: string
+                  example: "WA12345"
+                  description: Numer rejestracyjny (unikalny)
+                type:
+                  type: string
+                  enum: [sedan, SUV, hatchback, van, coupe, electric]
+                  example: "SUV"
+                  description: Typ nadwozia
+                fuel_type:
+                  type: string
+                  enum: [petrol, diesel, electric, hybrid]
+                  example: "diesel"
+                  description: Rodzaj paliwa
+                transmission:
+                  type: string
+                  enum: [manual, automatic]
+                  example: "automatic"
+                  description: Typ skrzyni biegów
+                seats:
+                  type: integer
+                  minimum: 1
+                  maximum: 9
+                  example: 5
+                  description: Liczba miejsc
+                price_per_day:
+                  type: number
+                  format: float
+                  minimum: 1
+                  example: 560.00
+                  description: Cena za dzień wynajmu
+                status:
+                  type: string
+                  enum: [available, rented, maintenance]
+                  example: "available"
+                  description: Status dostępności
+                has_gps:
+                  type: boolean
+                  example: true
+                  description: Czy posiada GPS
+                has_air_conditioning:
+                  type: boolean
+                  example: true
+                  description: Czy posiada klimatyzację
+                rental_point_id:
+                  type: integer
+                  example: 1
+                  description: ID punktu wypożyczalni
+                description:
+                  type: string
+                  example: "Luksusowy SUV z pełnym wyposażeniem"
+                  description: Dodatkowy opis samochodu
+                image:
+                  type: string
+                  format: binary
+                  description: Zdjęcie samochodu (jpeg, png, jpg, webp, max 3MB)
+      responses:
+        '201':
+          description: Samochód utworzony pomyślnie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Samochód dodany i ubezpieczenie wyliczone!"
+                  car:
+                    $ref: '#/components/schemas/Car'
+        '401':
+          description: Brak autoryzacji
+        '422':
+          description: Błąd walidacji danych
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/cars/{id}:
+    put:
+      tags: [Admin Cars]
+      summary: Aktualizuj samochód
+      description: Aktualizuje dane samochodu. Ubezpieczenia są automatycznie przeliczane.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID samochodu do aktualizacji
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - brand
+                - model
+                - year
+                - registration_number
+                - type
+                - fuel_type
+                - transmission
+                - seats
+                - price_per_day
+                - status
+                - has_gps
+                - has_air_conditioning
+              properties:
+                brand:
+                  type: string
+                  example: "BMW"
+                model:
+                  type: string
+                  example: "X5"
+                year:
+                  type: integer
+                  example: 2023
+                registration_number:
+                  type: string
+                  example: "WA12345"
+                type:
+                  type: string
+                  enum: [sedan, SUV, hatchback, van, coupe, electric]
+                  example: "SUV"
+                fuel_type:
+                  type: string
+                  enum: [petrol, diesel, electric, hybrid]
+                  example: "diesel"
+                transmission:
+                  type: string
+                  enum: [manual, automatic]
+                  example: "automatic"
+                seats:
+                  type: integer
+                  minimum: 1
+                  maximum: 9
+                  example: 5
+                price_per_day:
+                  type: number
+                  format: float
+                  example: 560.00
+                status:
+                  type: string
+                  enum: [available, rented, maintenance]
+                  example: "available"
+                has_gps:
+                  type: boolean
+                  example: true
+                has_air_conditioning:
+                  type: boolean
+                  example: true
+                rental_point_id:
+                  type: integer
+                  nullable: true
+                  example: 1
+                description:
+                  type: string
+                  example: "Luksusowy SUV z pełnym wyposażeniem"
+                remove_image:
+                  type: string
+                  enum: ['0', '1']
+                  example: '0'
+                  description: Ustaw '1' aby usunąć obecne zdjęcie
+                image:
+                  type: string
+                  format: binary
+                  description: Nowe zdjęcie (zastąpi obecne)
+      responses:
+        '200':
+          description: Samochód zaktualizowany
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Zaktualizowano dane i przeliczono stawki ubezpieczeń!"
+                  car:
+                    $ref: '#/components/schemas/Car'
+        '401':
+          description: Brak autoryzacji
+        '404':
+          description: Samochód nie znaleziony
+        '422':
+          description: Błąd walidacji
+
+    delete:
+      tags: [Admin Cars]
+      summary: Usuń samochód
+      description: Usuwa samochód z bazy danych wraz ze zdjęciem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID samochodu do usunięcia
+      responses:
+        '200':
+          description: Samochód usunięty
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Samochód został usunięty"
+        '401':
+          description: Brak autoryzacji
+        '404':
+          description: Samochód nie znaleziony
+
+  # ===================================
+  # ADMIN - STATYSTYKI
+  # ===================================
+  /admin/stats:
+    get:
+      tags: [Admin Stats]
+      summary: Statystyki samochodów
+      description: Pobiera kompleksowe statystyki dotyczące floty samochodów (typ, paliwo, miasta, średnie ceny)
+      responses:
+        '200':
+          description: Statystyki samochodów
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarStats'
+        '401':
+          description: Brak autoryzacji
+
+  /admin/revenue-stats:
+    get:
+      tags: [Admin Stats]
+      summary: Statystyki finansowe ogólne
+      description: Pobiera ogólne statystyki przychodów, zwrotów i wartości wypożyczeń
+      responses:
+        '200':
+          description: Statystyki finansowe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueStats'
+        '401':
+          description: Brak autoryzacji
+
+  /admin/revenue-by-month:
+    get:
+      tags: [Admin Stats]
+      summary: Przychody w ujęciu miesięcznym
+      description: Pobiera przychody z podziałem na miesiące wraz z liczbą wypożyczeń
+      responses:
+        '200':
+          description: Przychody miesięczne
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonthlyRevenue'
+        '401':
+          description: Brak autoryzacji
+
+  /admin/revenue-by-point:
+    get:
+      tags: [Admin Stats]
+      summary: Przychody według punktów wypożyczalni
+      description: Pobiera top 10 punktów wypożyczalni według wygenerowanych przychodów
+      responses:
+        '200':
+          description: Przychody według punktów
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PointRevenue'
+        '401':
+          description: Brak autoryzacji
+
+  /admin/top-users:
+    get:
+      tags: [Admin Stats]
+      summary: Top 10 użytkowników
+      description: Pobiera listę 10 użytkowników, którzy wydali najwięcej na wypożyczenia
+      responses:
+        '200':
+          description: Top użytkownicy
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopUser'
+        '401':
+          description: Brak autoryzacji
+
+  /admin/discount-stats:
+    get:
+      tags: [Admin Stats]
+      summary: Statystyki zniżek
+      description: Pobiera statystyki dotyczące udzielonych zniżek i promocji
+      responses:
+        '200':
+          description: Statystyki zniżek
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscountStats'
+        '401':
+          description: Brak autoryzacji
+
+  # ===================================
+  # UŻYTKOWNIK - WYPOŻYCZENIA
+  # ===================================
+  /user/rentals:
+    get:
+      tags: [User Rentals]
+      summary: Moje wypożyczenia
+      description: Pobiera listę wypożyczeń zalogowanego użytkownika
+      responses:
+        '200':
+          description: Lista wypożyczeń użytkownika
+        '401':
+          description: Brak autoryzacji
+
+    post:
+      tags: [User Rentals]
+      summary: Rezerwacja samochodu
+      description: Tworzy nowe wypożyczenie samochodu przez klienta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - car_id
+                - rental_point_start_id
+                - rental_point_end_id
+                - start_date
+                - planned_end_date
+              properties:
+                car_id:
+                  type: integer
+                  example: 1
+                  description: ID samochodu do wypożyczenia
+                rental_point_start_id:
+                  type: integer
+                  example: 1
+                  description: ID punktu odbioru
+                rental_point_end_id:
+                  type: integer
+                  example: 2
+                  description: ID punktu zwrotu
+                start_date:
+                  type: string
+                  format: date
+                  example: "2026-02-15"
+                  description: Data rozpoczęcia wynajmu
+                planned_end_date:
+                  type: string
+                  format: date
+                  example: "2026-02-20"
+                  description: Planowana data zakończenia
+                use_extra_insurance:
+                  type: boolean
+                  example: false
+                  description: Czy użyć dodatkowego ubezpieczenia
+      responses:
+        '201':
+          description: Wynajem zarejestrowany
+        '401':
+          description: Brak autoryzacji
+        '422':
+          description: Błąd walidacji
