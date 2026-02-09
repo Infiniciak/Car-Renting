@@ -88,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/cars', [CarController::class, 'index']);
         Route::post('/cars', [CarController::class, 'store']);
-        Route::put('/cars/{car}', [CarController::class, 'update']);
+        Route::post('/cars/{car}', [CarController::class, 'update']);
         Route::delete('/cars/{car}', [CarController::class, 'destroy']);
 
         Route::get('/rentals', [RentalController::class, 'index']);
