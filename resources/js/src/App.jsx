@@ -20,7 +20,7 @@ import CarWizard from '../pages/CarWizard.jsx';
 import RentalBooking from '../pages/RentalBooking.jsx';
 import UserRentals from '../pages/UserRentals.jsx';
 import AdminPromoCodes from '../pages/AdminPromoCodes.jsx';
-
+import NotFound from '../pages/NotFound.jsx';
 
 // --- FUNKCJA POMOCNICZA: SPRAWDZANIE CZY TOKEN JEST PRAWIDŁOWY ---
 const isValidToken = (token) => {
@@ -31,7 +31,39 @@ const isValidToken = (token) => {
     return true;
 };
 
+// --- FUNKCJA APLIKUJĄCA MOTYW ---
+const applyTheme = (theme) => {
+    console.log('🎨 Applying theme to DOM:', theme);
+    
+    const root = document.documentElement;
+    
+    // 1. Usuń obie klasy
+    root.classList.remove('dark', 'light');
+    
+    // 2. Ustaw data-theme
+    root.setAttribute('data-theme', theme);
+
+    // 3. Dodaj odpowiednią klasę
+    if (theme === 'dark') {
+        root.classList.add('dark');
+        console.log('✅ Dark mode applied');
+        // Usuń light mode overrides jeśli były
+        const lightStyle = document.getElementById('light-mode-overrides');
+        if (lightStyle) lightStyle.remove();
+    } else {
+        root.classList.add('light');
+        console.log('✅ Light mode applied');
+    }
+    
+    // 4. Wymuś reflow
+    void root.offsetHeight;
+    
+    console.log('✓ Theme applied - classList:', root.classList.toString());
+};
+
 function App() {
+    console.log('🚀 App component rendered');
+    
     const [auth, setAuth] = useState({
         token: localStorage.getItem('token'),
         role: localStorage.getItem('role')
@@ -49,22 +81,52 @@ function App() {
         return () => window.removeEventListener('storage', refreshAuth);
     }, []);
 
+    // --- USTAWIENIE MOTYWU NA STARCIE I NASŁUCHIWANIE ZMIAN ---
+    useEffect(() => {
+        console.log('🎬 Theme useEffect mounted');
+        
+        // Zastosuj motyw przy pierwszym załadowaniu
+        const theme = localStorage.getItem('theme') || 'light';
+        console.log('📖 Loading initial theme:', theme);
+        applyTheme(theme);
+        
+        // Słucha custom event'u 'themeChanged' z Profile.jsx
+        const handleThemeChanged = (e) => {
+            console.log('📨 Received themeChanged event:', e.detail);
+            applyTheme(e.detail.theme);
+        };
+        
+        window.addEventListener('themeChanged', handleThemeChanged);
+        console.log('👂 Listening for themeChanged events');
+        
+        return () => {
+            console.log('🔌 Removing themeChanged listener');
+            window.removeEventListener('themeChanged', handleThemeChanged);
+        };
+    }, []);
+
     // --- ZABEZPIECZONY ROUTE ---
-    const ProtectedRoute = ({ children }) => {
+    const ProtectedRoute = ({ children, allowedRole }) => {
         const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
 
         if (!isValidToken(token)) {
-            // Jeśli token jest śmieciem, czyścimy go i wyrzucamy do logowania
             localStorage.removeItem('token');
             localStorage.removeItem('role');
             return <Navigate to="/login" replace />;
         }
+
+        if (allowedRole && role !== allowedRole) {
+            return <Navigate to="/dashboard" replace />;
+        }
+
         return children;
     };
 
     return (
         <Router>
             <Routes>
+                {/* PUBLICZNE STRONY */}
                 <Route path="/login" element={<Login onLoginSuccess={refreshAuth} />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -73,23 +135,19 @@ function App() {
                 <Route path="/car/:id" element={<PublicCarDetails />} />
                 <Route path="/compare" element={<CarComparison />} />
                 <Route path="/wizard" element={<CarWizard />} />
-                <Route path="/rental/:carId" element={<RentalBooking />} />
-                <Route path="/user/rentals" element={<UserRentals />} />
 
-                <Route path="/dashboard" element={<DashboardRedirect />} />
+                {/* STRONY UŻYTKOWNIKA */}
+                <Route path="/rental/:carId" element={
+                    <ProtectedRoute>
+                        <RentalBooking />
+                    </ProtectedRoute>
+                } />
+                <Route path="/user/rentals" element={
+                    <ProtectedRoute>
+                        <UserRentals />
+                    </ProtectedRoute>
+                } />
 
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-
-                <Route path="/admin" element={<ProtectedRoute><AdminPanel onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/employee" element={<ProtectedRoute><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/user" element={<ProtectedRoute><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
-
-                <Route path="/admin/rental-points" element={<ProtectedRoute><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/admin/users" element={<ProtectedRoute><UserManagement onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/admin/cars" element={<ProtectedRoute allowedRole="admin"><AdminCars onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 {/* PROFIL */}
                 <Route path="/profile" element={
                     <ProtectedRoute>
@@ -97,17 +155,10 @@ function App() {
                     </ProtectedRoute>
                 } />
 
-                <Route path="/dashboard" element={<DashboardRedirect auth={auth} />} />
+                {/* DASHBOARD */}
+                <Route path="/dashboard" element={<DashboardRedirect />} />
 
-                <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><AdminPanel onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/admin/rental-points" element={<ProtectedRoute allowedRole="admin"><AdminRentalPoints onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/admin/rentals" element={<ProtectedRoute allowedRole="admin"><AdminRentals onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeePanel onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/user" element={<ProtectedRoute allowedRole="user"><UserPanel onLogout={refreshAuth} /></ProtectedRoute>} />
-                <Route path="/offer" element={<PublicRentalPoints />} />
-                <Route path="/admin/promo-codes" element={<AdminPromoCodes allowedRole="admin"><AdminPanel onLogout={refreshAuth} /></AdminPromoCodes>} />
-
-                {/* ROLE: ADMIN */}
+                {/* PANEL ADMINA */}
                 <Route path="/admin" element={
                     <ProtectedRoute allowedRole="admin">
                         <AdminPanel onLogout={refreshAuth} />
@@ -126,44 +177,69 @@ function App() {
                     </ProtectedRoute>
                 } />
 
-                {/* ROLA: EMPLOYEE */}
+                <Route path="/admin/cars" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminCars onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/admin/rentals" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminRentals onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/admin/dashboard" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminDashboard />
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/admin/promo-codes" element={
+                    <ProtectedRoute allowedRole="admin">
+                        <AdminPromoCodes onLogout={refreshAuth} />
+                    </ProtectedRoute>
+                } />
+
+                {/* PANEL PRACOWNIKA */}
                 <Route path="/employee" element={
                     <ProtectedRoute allowedRole="employee">
                         <EmployeePanel onLogout={refreshAuth} />
                     </ProtectedRoute>
                 } />
 
-                {/* ROLA: USER */}
+                {/* PANEL UŻYTKOWNIKA */}
                 <Route path="/user" element={
                     <ProtectedRoute allowedRole="user">
                         <UserPanel onLogout={refreshAuth} />
                     </ProtectedRoute>
                 } />
 
-                <Route path="/" element={<Navigate to="/login" />} />
+                {/* REDIRECT GŁÓWNY */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+                {/* 404 */}
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </Router>
     );
 }
 
-// --- ZABEZPIECZONY REDIRECT (TUTAJ BYŁA PĘTLA) ---
+// --- ZABEZPIECZONY REDIRECT ---
 const DashboardRedirect = () => {
     const token = localStorage.getItem('token');
     let role = localStorage.getItem('role');
 
-    // Jeśli token jest "undefined" lub go nie ma -> Logowanie
     if (!isValidToken(token)) {
-        localStorage.clear(); // Czyścimy błędny stan
+        localStorage.clear();
         return <Navigate to="/login" replace />;
     }
 
-    // Jeśli rola jest "obiektem" (błąd Laravel Enum) -> Logowanie
     if (role === '[object Object]') {
          localStorage.clear();
          return <Navigate to="/login" replace />;
     }
 
-    // Normalizacja roli
     role = role ? role.trim() : '';
 
     if (role === 'admin') return <Navigate to="/admin" replace />;

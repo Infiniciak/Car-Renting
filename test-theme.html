@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body class="p-8">
+    <div class="max-w-md mx-auto">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Theme Switcher Test</h1>
+        
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 mb-4">
+            <p class="text-gray-900 dark:text-white">This text should change color</p>
+            <p class="text-gray-600 dark:text-gray-400">This is secondary text</p>
+        </div>
+
+        <div class="flex gap-4">
+            <button onclick="setLight()" class="bg-blue-500 text-white px-4 py-2 rounded">Light</button>
+            <button onclick="setDark()" class="bg-gray-800 text-white px-4 py-2 rounded">Dark</button>
+        </div>
+
+        <div class="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded">
+            <p class="text-sm text-gray-600 dark:text-gray-300">Current theme: <span id="theme-display">checking...</span></p>
+            <p class="text-sm text-gray-600 dark:text-gray-300">HTML has 'dark' class: <span id="has-dark">checking...</span></p>
+            <p class="text-sm text-gray-600 dark:text-gray-300">LocalStorage theme: <span id="ls-theme">checking...</span></p>
+        </div>
+    </div>
+
+    <script>
+        function updateDisplay() {
+            const hasDark = document.documentElement.classList.contains('dark');
+            const lsTheme = localStorage.getItem('theme') || 'none';
+            
+            document.getElementById('has-dark').textContent = hasDark ? 'YES' : 'NO';
+            document.getElementById('ls-theme').textContent = lsTheme;
+            document.getElementById('theme-display').textContent = hasDark ? 'DARK' : 'LIGHT';
+        }
+
+        function setLight() {
+            console.log('Setting LIGHT theme');
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            updateDisplay();
+        }
+
+        function setDark() {
+            console.log('Setting DARK theme');
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            updateDisplay();
+        }
+
+        // Initialize
+        updateDisplay();
+        setInterval(updateDisplay, 1000);
+
+        // Apply saved theme on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            console.log('Initial theme from localStorage:', savedTheme);
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>

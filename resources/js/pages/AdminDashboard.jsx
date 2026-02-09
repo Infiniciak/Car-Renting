@@ -52,7 +52,7 @@ const AdminDashboard = () => {
     };
 
     if (!vehicleStats || !revenueStats) return (
-        <div className="min-h-screen bg-[#11111d] flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
             <div className="animate-pulse flex flex-col items-center gap-4">
                 <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-indigo-400 font-black tracking-widest uppercase text-xs">Ładowanie danych...</p>
@@ -61,7 +61,7 @@ const AdminDashboard = () => {
     );
 
     return (
-        <div className="min-h-screen bg-[#11111d] p-8 text-white font-sans">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 text-gray-900 dark:text-white font-sans transition-colors duration-300">
             <div className="max-w-7xl mx-auto">
                 <header className="mb-12 flex justify-between items-end">
                     <div>
@@ -80,7 +80,7 @@ const AdminDashboard = () => {
                         className={`px-8 py-4 rounded-2xl font-black uppercase tracking-tight text-sm transition-all ${
                             activeTab === 'vehicles'
                                 ? 'bg-indigo-600 text-white'
-                                : 'bg-[#1e1e2d] text-gray-400 hover:bg-[#252538]'
+                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                         }`}
                     >
                         Pojazdy
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
                         className={`px-8 py-4 rounded-2xl font-black uppercase tracking-tight text-sm transition-all ${
                             activeTab === 'revenue'
                                 ? 'bg-indigo-600 text-white'
-                                : 'bg-[#1e1e2d] text-gray-400 hover:bg-[#252538]'
+                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                         }`}
                     >
                         Przychody
@@ -157,7 +157,7 @@ const AdminDashboard = () => {
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                            <div className="lg:col-span-2 bg-[#1e1e2d] p-8 rounded-[3rem] border border-white/5 shadow-xl h-[400px]">
+                            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-8 rounded-[3rem] border border-gray-200 dark:border-gray-700 shadow-xl h-[400px] transition-colors duration-300">
                                 <h3 className="text-xs font-black uppercase tracking-widest mb-8 text-gray-400 border-l-4 border-emerald-500 pl-4">Rodzaje Paliwa</h3>
                                 <ResponsiveContainer width="100%" height="80%">
                                     <BarChart data={vehicleStats.fuel_stats} layout="vertical">
@@ -169,11 +169,11 @@ const AdminDashboard = () => {
                                 </ResponsiveContainer>
                             </div>
 
-                            <div className="bg-[#1e1e2d] p-8 rounded-[3rem] border border-white/5 shadow-xl flex flex-col">
+                            <div className="bg-white dark:bg-gray-800 p-8 rounded-[3rem] border border-gray-200 dark:border-gray-700 shadow-xl flex flex-col transition-colors duration-300">
                                 <h3 className="text-xs font-black uppercase tracking-widest mb-6 text-gray-400">Pojazdy w miastach</h3>
                                 <div className="space-y-3 overflow-y-auto pr-2">
                                     {vehicleStats.city_stats.map((city, i) => (
-                                        <div key={i} className="flex justify-between items-center p-4 bg-black/20 rounded-[1.5rem] border border-white/5 transition-hover hover:border-indigo-500/30">
+                                        <div key={i} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-[1.5rem] border border-gray-200 dark:border-gray-600 transition-hover hover:border-indigo-500/30">
                                             <span className="text-xs font-bold uppercase tracking-tight">{city.city}</span>
                                             <span className="text-indigo-400 font-black text-xs">{city.total} szt.</span>
                                         </div>
