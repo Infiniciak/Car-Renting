@@ -10,6 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        if (!Schema::hasTable('cars')) {
         Schema::create('cars', function (Blueprint $table) {
             $table->id();
             $table->string('brand'); // marka (np. BMW, Tesla)
@@ -37,7 +38,33 @@ return new class extends Migration {
 
             $table->timestamps();
         });
+        } else {
+            Schema::table('cars', function (Blueprint $table) {
+                $columns = [
+                    'year' => fn() => $table->integer('year')->after('model')->nullable(),
+                    'type' => fn() => $table->string('type')->after('registration_number')->nullable(),
+                    'fuel_type' => fn() => $table->string('fuel_type')->after('type')->nullable(),
+                    'transmission' => fn() => $table->string('transmission')->after('fuel_type')->nullable(),
+                    'seats' => fn() => $table->integer('seats')->after('transmission')->nullable(),
+                    'status' => fn() => $table->string('status')->default('available')->after('seats'),
+                    'image_path' => fn() => $table->string('image_path')->nullable()->after('status'),
+                    'description' => fn() => $table->text('description')->nullable()->after('image_path'),
+                    'insurance_per_day' => fn() => $table->decimal('insurance_per_day', 10, 2)->default(0),
+                    'has_gps' => fn() => $table->boolean('has_gps')->default(false),
+                    'has_air_conditioning' => fn() => $table->boolean('has_air_conditioning')->default(true),
+                    'discount_percentage' => fn() => $table->decimal('discount_percentage', 5, 2)->default(0),
+                ];
+
+                foreach ($columns as $name => $callback) {
+                    if (!Schema::hasColumn('cars', $name)) {
+                        $callback();
+                    }
+                }
+            });
+        }
     }
+
+
 
     /**
      * Reverse the migrations.

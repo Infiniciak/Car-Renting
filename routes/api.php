@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\RentalController;
 use App\Http\Controllers\Admin\AdminStatsController;
 use App\Http\Controllers\Api\UserRentalController;
 use App\Http\Controllers\Admin\PromoCodeController;
+use App\Http\Controllers\Api\EmployeeCarController;
 
 // --- TRASY PUBLICZNE ---
 Route::post('/login', [ApiAuthController::class, 'login']);
@@ -61,6 +62,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/rentals', [UserRentalController::class, 'store']);
         Route::get('/rentals', [UserRentalController::class, 'myRentals']);
         Route::post('/rentals/{rental}/cancel', [UserRentalController::class, 'cancel']);
+    });
+
+
+   // --- TRASY DLA PRACOWNIKA ---
+    Route::middleware('role:employee')->prefix('employee')->group(function () {
+        Route::get('/cars', [EmployeeCarController::class, 'index']);
+        Route::post('/cars', [EmployeeCarController::class, 'store']);
+        Route::delete('/cars/{id}', [EmployeeCarController::class, 'destroy']);
+        Route::patch('/cars/{id}/status', [EmployeeCarController::class, 'changeStatus']);
+        Route::patch('/cars/{id}/promotion', [EmployeeCarController::class, 'setPromotion']);
     });
 
     // --- TYLKO DLA ADMINA ---
